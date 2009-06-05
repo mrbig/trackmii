@@ -18,6 +18,28 @@ typedef struct point2D {
     uint16_t y;
 } point2D;
 
+typedef struct point3Df {
+    float x;
+    float y;
+    float z;
+} point3Df;
+
+typedef struct {
+    float yaw;
+    float pitch;
+    float roll;
+
+    float panX;
+    float panY;
+    float panZ;
+} TPose;
+
+
+void Initialize3PCapModel(point3Df dimensions3PtsCap[3]);
+
+int AlterPose(point2D pnts[3], TPose *pose);
+
+void PoseToDegrees(TPose *pose);
 
 float CalculateHeadYaw(point2D pnts[3]);
 

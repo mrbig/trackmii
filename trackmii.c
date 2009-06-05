@@ -33,8 +33,9 @@ void cwiid_callback(cwiid_wiimote_t *wiimote, int mesg_count,
                     union cwiid_mesg mesg[], struct timespec *timestamp) {
     int i, j, valid;
     struct point lft, top, rgt;
-    double yaw;
+    //double yaw;
     point2D pnts[3];
+    TPose pose;
 
     for (i=0; i<mesg_count; i++) {
         if (mesg[i].type != CWIID_MESG_IR) continue;
@@ -57,10 +58,19 @@ void cwiid_callback(cwiid_wiimote_t *wiimote, int mesg_count,
             continue;
         }
 
+        /*
         yaw = CalculateHeadYaw(pnts);
-        printf(" yaw: %2f", yaw);
+        printf(" yaw: %2f\n", yaw);
+         */
 
+        if (AlterPose(pnts, &pose)) {
+            printf("TrackMii: ---\n");
+        } else {
+            PoseToDegrees(&pose);
+            printf("TrackMii: pitch: %f roll: %f yaw: %f\n", pose.pitch, pose.roll, pose.yaw);
+        }
         printf("\n");
+
 
     }
 };
@@ -72,6 +82,7 @@ int main(int argc, char** argv) {
     struct cwiid_state state;
     bdaddr_t bdaddr;
     int exit = 0;
+    point3Df dimensions3PtsCap[3];
 
     bdaddr = *BDADDR_ANY;
 
@@ -96,6 +107,13 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Error enabling messages\n");
     }
     // */
+
+
+    dimensions3PtsCap[0].x = 70;
+    dimensions3PtsCap[0].y = 80;
+    dimensions3PtsCap[0].z = 100;
+
+    Initialize3PCapModel(dimensions3PtsCap);
 
     while (!exit) {
         switch(getchar()) {
