@@ -19,6 +19,7 @@
 #include "XPLMGraphics.h"
 #include "XPLMCamera.h"
 #include "XPLMDataAccess.h"
+#include "pose.h"
 
 /*
  * Global Variables.  We will store our single window globally.  We also record
@@ -34,9 +35,6 @@ XPLMWindowID    gWindow = NULL;
 // Wiimote handler
 cwiid_wiimote_t *gWiimote;
 
-// Current heading
-float gYaw;
-
 int gFreeView = 0;
 
 void MyDrawWindowCallback(
@@ -45,12 +43,8 @@ void MyDrawWindowCallback(
 
 void    MyHotKeyCallback(void *               inRefcon);    
 
-XPLMDataRef gPilotHeadDataRef = NULL;
-
-struct point {
-    uint16_t x;
-    uint16_t y;
-};
+XPLMDataRef gPilotHeadYawDf = NULL;
+XPLMDataRef gPilotHeadPitchDf = NULL;
 
 /*
  * XPluginStart
@@ -86,6 +80,7 @@ PLUGIN_API int XPluginStart(
      * will not be called back again. */
     
     bdaddr_t bdaddr;
+    point3Df dimensions3PtsCap[3];
     
     bdaddr = *BDADDR_ANY;
     fprintf(stderr, "Connecting to wiimote\n");
@@ -104,7 +99,15 @@ PLUGIN_API int XPluginStart(
                                  MyHotKeyCallback,
                                  NULL);
     
-    gPilotHeadDataRef = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
+    gPilotHeadYawDf = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
+    gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
+
+    dimensions3PtsCap[0].x = 70;
+    dimensions3PtsCap[0].y = 80;
+    dimensions3PtsCap[0].z = 100;
+
+    Initialize3PCapModel(dimensions3PtsCap);
+
     return 1;
 }
 
@@ -156,68 +159,6 @@ PLUGIN_API void XPluginReceiveMessage(
 {
 }
 
-float CalculateHeadPosition(struct cwiid_state *state) {
-    int valid, i, j;
-    
-    struct point lft, top, rgt;
-    float yaw;
-
-    /** yaw szamitasa **/
-    valid = lft.y = top.x = top.y = rgt.x = rgt.y = 0;
-    lft.x = 2000;
-
-    valid = 0;
-    for (j=0; j<CWIID_IR_SRC_COUNT; j++) {
-        if (!state->ir_src[j].valid) continue;
-        
-        if (state->ir_src[j].pos[CWIID_Y] > top.y) {
-            top.x = state->ir_src[j].pos[CWIID_X];
-            top.y = state->ir_src[j].pos[CWIID_Y];
-        }
-
-        valid++;
-    }
-    if (valid < 3) {
-        return 0;
-    }
-
-    for (j=0; j<CWIID_IR_SRC_COUNT; j++) {
-        if (state->ir_src[j].valid) {
-            
-            if (state->ir_src[j].pos[CWIID_X] == top.x &&
-                state->ir_src[j].pos[CWIID_Y] == top.y) continue;
-
-            if (state->ir_src[j].pos[CWIID_X] < lft.x) {
-                lft.x = state->ir_src[j].pos[CWIID_X];
-                lft.y = state->ir_src[j].pos[CWIID_Y];
-            }
-            if (state->ir_src[j].pos[CWIID_X] > rgt.x) {
-                rgt.x = state->ir_src[j].pos[CWIID_X];
-                rgt.y = state->ir_src[j].pos[CWIID_Y];
-            }
-            
-            valid++;
-
-        }
-    }
-    
-    float l1 = top.x-lft.x;
-    float l2 = rgt.x-top.x;
-    
-    yaw = asin((l1-l2)/(fabs(l2)+fabs(l1)));
-    
-    yaw = yaw * 180 / M_PI;
-    
-    yaw = yaw * (yaw/90) * (yaw/90);
-    
-    gYaw = yaw;
-    
-    if (gFreeView) {
-        XPLMSetDataf(gPilotHeadDataRef, yaw);
-    }
-    
-    return yaw;
-}
 
 /*
  * MyDrawingWindowCallback
@@ -237,8 +178,11 @@ void MyDrawWindowCallback(
     
     struct cwiid_state state;
     char buf[1024];
-    int i;
+    int i, valid;
     float yaw;
+    valid = 0;
+    point2D pnts[3];
+    TPose pose;
     
     
     /* First we get the location of the window passed in to us. */
@@ -255,6 +199,9 @@ void MyDrawWindowCallback(
         if (state.ir_src[i].valid) {
             sprintf(buf+strlen(buf), "(%d, %d) ", state.ir_src[i].pos[CWIID_X],
                                       state.ir_src[i].pos[CWIID_Y]);
+            pnts[valid].x = state.ir_src[i].pos[CWIID_X];
+            pnts[valid].y = state.ir_src[i].pos[CWIID_Y];
+            valid++;
         } else {
             sprintf(buf+strlen(buf), "(_, _) ");
         }
@@ -262,15 +209,19 @@ void MyDrawWindowCallback(
     XPLMDrawString(color, left + 5, top - 10,
                    buf, NULL, xplmFont_Basic);
     
-    yaw = CalculateHeadPosition( &state );
-    
-    sprintf(buf, "yaw: %2f", yaw);
-    XPLMDrawString(color, left + 5, top - 20,
-                   buf, NULL, xplmFont_Basic);
-    
-    sprintf(buf, "phead: %2f", XPLMGetDataf(gPilotHeadDataRef));
-    XPLMDrawString(color, left + 5, top - 30,
+
+    if (valid == 3 && !AlterPose(pnts, &pose)) {
+        PoseToDegrees(&pose);
+        sprintf(buf, "TrackMii: pitch: %f roll: %f yaw: %f\n", pose.pitch, pose.roll, pose.yaw);
+        XPLMDrawString(color, left + 5, top - 20,
                        buf, NULL, xplmFont_Basic);
+
+        if (gFreeView) {
+            XPLMSetDataf(gPilotHeadYawDf, -pose.yaw);
+            XPLMSetDataf(gPilotHeadPitchDf, pose.pitch);
+        }
+    
+    }
 }                                   
 
 
