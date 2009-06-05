@@ -12,6 +12,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>pose.c</itemPath>
       <itemPath>trackmii.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -29,6 +30,9 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <cCompilerTool>
+          <warningLevel>2</warningLevel>
+        </cCompilerTool>
         <linkerTool>
           <linkerLibItems>
             <linkerLibLibItem>cwiid</linkerLibLibItem>
@@ -36,6 +40,9 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="pose.c">
+        <itemTool>0</itemTool>
+      </item>
       <item path="trackmii.c">
         <itemTool>0</itemTool>
       </item>
@@ -61,6 +68,9 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="pose.c">
+        <itemTool>0</itemTool>
+      </item>
       <item path="trackmii.c">
         <itemTool>0</itemTool>
       </item>

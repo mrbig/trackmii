@@ -28,7 +28,8 @@ OBJECTDIR=build/Release/${PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/trackmii.o
+	${OBJECTDIR}/trackmii.o \
+	${OBJECTDIR}/pose.o
 
 # C Compiler Flags
 CFLAGS=
@@ -55,6 +56,11 @@ ${OBJECTDIR}/trackmii.o: trackmii.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii.o trackmii.c
+
+${OBJECTDIR}/pose.o: pose.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/pose.o pose.c
 
 # Subprojects
 .build-subprojects:
