@@ -17,10 +17,19 @@ float dist1, dist2;
 
 float FZScalar = 1320;
 
+TPose oldpose;
+
+#define SMOOTHING 15
+#define GLOBAL_SMOOTHING 100
+
 void Initialize3PCapModel(point3Df dimensions3PtsCap[3]) {
     int i;
     float dot;
     float top[3], R01_v[3], R02_v[3], R12_v[3];
+
+    oldpose.yaw = 0;
+    oldpose.roll = 0;
+    oldpose.pitch = 0;
 
     R01_v[0] = -1 * dimensions3PtsCap[0].x;
     R01_v[1] = -1 * dimensions3PtsCap[0].y;
@@ -211,6 +220,32 @@ void PoseToDegrees(TPose *pose) {
     pose->yaw = pose->yaw * 180 / M_PI;
     pose->roll = pose->roll * 180 / M_PI;
     pose->pitch = pose->pitch * 180 / M_PI;
+}
+
+/**
+ * Smooth position changes
+ */
+void SmoothPose(TPose *pose) {
+    float SmoothingSize;
+    TPose delta;
+
+    SmoothingSize =  20 * SMOOTHING * GLOBAL_SMOOTHING * 0.001;
+
+    delta.yaw = abs(pose->yaw - oldpose.yaw);
+    delta.roll = abs(pose->roll - oldpose.roll);
+    delta.pitch = abs(pose->pitch - oldpose.pitch);
+
+    pose->yaw = ((pose->yaw * delta.yaw) / (delta.yaw + SmoothingSize))
+           + ((oldpose.yaw * SmoothingSize) / (delta.yaw + SmoothingSize));
+    pose->roll = ((pose->roll * delta.roll) / (delta.roll + SmoothingSize))
+           + ((oldpose.roll * SmoothingSize) / (delta.roll + SmoothingSize));
+    pose->pitch = ((pose->pitch * delta.pitch) / (delta.pitch + SmoothingSize))
+           + ((oldpose.pitch * SmoothingSize) / (delta.pitch + SmoothingSize));
+
+
+    oldpose.yaw = pose->yaw;
+    oldpose.roll = pose->roll;
+    oldpose.pitch = pose->pitch;
 }
 
 /**

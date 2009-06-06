@@ -67,6 +67,7 @@ void cwiid_callback(cwiid_wiimote_t *wiimote, int mesg_count,
             printf("TrackMii: ---\n");
         } else {
             PoseToDegrees(&pose);
+            SmoothPose(&pose);
             printf("TrackMii: pitch: %f roll: %f yaw: %f\n", pose.pitch, pose.roll, pose.yaw);
         }
         printf("\n");

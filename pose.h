@@ -41,6 +41,8 @@ int AlterPose(point2D pnts[3], TPose *pose);
 
 void PoseToDegrees(TPose *pose);
 
+void SmoothPose(TPose *pose);
+
 float CalculateHeadYaw(point2D pnts[3]);
 
 
