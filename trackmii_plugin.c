@@ -37,12 +37,18 @@ cwiid_wiimote_t *gWiimote;
 
 int gFreeView = 0;
 
-void MyDrawWindowCallback(
-                                   XPLMWindowID         inWindowID,    
-                                   void *               inRefcon);    
+// This is the current head pose
+TPose gPose;
 
-void    MyHotKeyCallback(void *               inRefcon);    
+void MyDrawWindowCallback( XPLMWindowID inWindowID,    
+                           void * inRefcon);
 
+void MyHotKeyCallback(void * inRefcon);    
+
+int MyDrawingCallback (
+                                   XPLMDrawingPhase     inPhase,    
+                                   int                  inIsBefore,    
+                                   void *               inRefcon);
 XPLMDataRef gPilotHeadYawDf = NULL;
 XPLMDataRef gPilotHeadPitchDf = NULL;
 
@@ -83,7 +89,7 @@ PLUGIN_API int XPluginStart(
     point3Df dimensions3PtsCap[3];
     
     bdaddr = *BDADDR_ANY;
-    fprintf(stderr, "Connecting to wiimote\n");
+    fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
     
     if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
         return 0;
@@ -99,6 +105,9 @@ PLUGIN_API int XPluginStart(
                                  MyHotKeyCallback,
                                  NULL);
     
+    /* Register drawing callback */
+    XPLMRegisterDrawCallback(MyDrawingCallback, xplm_Phase_FirstScene, 1, NULL);
+
     gPilotHeadYawDf = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
     gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
 
@@ -176,13 +185,7 @@ void MyDrawWindowCallback(
     int        left, top, right, bottom;
     float    color[] = { 1.0, 1.0, 1.0 };     /* RGB White */
     
-    struct cwiid_state state;
     char buf[1024];
-    int i, valid;
-    float yaw;
-    valid = 0;
-    point2D pnts[3];
-    TPose pose;
     
     
     /* First we get the location of the window passed in to us. */
@@ -192,42 +195,56 @@ void MyDrawWindowCallback(
      * rectangle that is our window's shape. */
     XPLMDrawTranslucentDarkBox(left, top, right, bottom);
 
-    if (cwiid_get_state(gWiimote, &state)) return;
-    
-    sprintf(buf, "state: ");
-    for (i=0; i<CWIID_IR_SRC_COUNT; i++) {
-        if (state.ir_src[i].valid) {
-            sprintf(buf+strlen(buf), "(%d, %d) ", state.ir_src[i].pos[CWIID_X],
-                                      state.ir_src[i].pos[CWIID_Y]);
-            pnts[valid].x = state.ir_src[i].pos[CWIID_X];
-            pnts[valid].y = state.ir_src[i].pos[CWIID_Y];
-            valid++;
-        } else {
-            sprintf(buf+strlen(buf), "(_, _) ");
-        }
-    }
-    XPLMDrawString(color, left + 5, top - 10,
+    sprintf(buf, "TrackMii: pitch: %f yaw: %f\n", gPose.pitch, gPose.yaw);
+    XPLMDrawString(color, left + 5, top - 20,
                    buf, NULL, xplmFont_Basic);
-    
-
-    if (valid == 3 && !AlterPose(pnts, &pose)) {
-        PoseToDegrees(&pose);
-        sprintf(buf, "TrackMii: pitch: %f roll: %f yaw: %f\n", pose.pitch, pose.roll, pose.yaw);
-        XPLMDrawString(color, left + 5, top - 20,
-                       buf, NULL, xplmFont_Basic);
-
-        if (gFreeView) {
-            XPLMSetDataf(gPilotHeadYawDf, -pose.yaw);
-            XPLMSetDataf(gPilotHeadPitchDf, pose.pitch);
-        }
-    
-    }
 }                                   
 
+/**
+ * Drawing callback, here we do the headtracking processing
+ */
+int MyDrawingCallback (
+                                   XPLMDrawingPhase     inPhase,    
+                                   int                  inIsBefore,    
+                                   void *               inRefcon)
+{
+    // TODO: disable callback, when not needed
+    if (!gFreeView) return 1;
 
+    int i, valid;
+    struct cwiid_state state;
+    point2D pnts[3];
+
+    if (cwiid_get_state(gWiimote, &state)) return 1;
+
+    valid = 0;
+    for (i=0; i<CWIID_IR_SRC_COUNT; i++) {
+        if (state.ir_src[i].valid) {
+            if (valid<3) {
+                pnts[valid].x = state.ir_src[i].pos[CWIID_X];
+                pnts[valid].y = state.ir_src[i].pos[CWIID_Y];
+            }
+            valid++;
+        }
+    }
+
+    if (valid == 3 && !AlterPose(pnts, &gPose)) {
+        fprintf(stderr, "d\n");
+        PoseToDegrees(&gPose);
+        fprintf(stderr, "e\n");
+        XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
+        XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
+
+    }
+
+    return 1;
+}
+
+/**
+ * Hotkey for turnin the headtracking on/off
+ */
 void	MyHotKeyCallback(void *               inRefcon)
 {
-    /* Now we control the camera until the view changes. */
     gFreeView = 1-gFreeView;
 }
 
