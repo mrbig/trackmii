@@ -82,20 +82,23 @@ PLUGIN_API int XPluginStart(
                     NULL,
                     NULL);                        /* Refcon - not used. */
                     
-    /* We must return 1 to indicate successful initialization, otherwise we
-     * will not be called back again. */
-    
+
+    /*
+     * Wiimote initialization
+     */
     bdaddr_t bdaddr;
     point3Df dimensions3PtsCap[3];
     
     bdaddr = *BDADDR_ANY;
     fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
-    
+
+#ifndef WIIMOTE_DISABLED
     if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
         return 0;
     }
     cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
     cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
+#endif
     
     fprintf(stderr, "Wiimote connected\n");
     
@@ -108,15 +111,21 @@ PLUGIN_API int XPluginStart(
     /* Register drawing callback */
     XPLMRegisterDrawCallback(MyDrawingCallback, xplm_Phase_FirstScene, 1, NULL);
 
+    /* Necessary datarefs */
     gPilotHeadYawDf = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
     gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
 
+    /* Registering into the menu */
+
+    /* Initializing cap model */
     dimensions3PtsCap[0].x = 70;
     dimensions3PtsCap[0].y = 80;
     dimensions3PtsCap[0].z = 100;
 
     Initialize3PCapModel(dimensions3PtsCap);
 
+    /* We must return 1 to indicate successful initialization, otherwise we
+     * will not be called back again. */
     return 1;
 }
 
@@ -129,7 +138,7 @@ PLUGIN_API int XPluginStart(
 PLUGIN_API void    XPluginStop(void)
 {
     XPLMDestroyWindow(gWindow);
-    cwiid_close(gWiimote);
+    if (gWiimote) cwiid_close(gWiimote);
     fprintf(stderr, "Wiimote closed\n");
 }
 
@@ -209,7 +218,7 @@ int MyDrawingCallback (
                                    void *               inRefcon)
 {
     // TODO: disable callback, when not needed
-    if (!gFreeView) return 1;
+    if (!gFreeView || !gWiimote) return 1;
 
     int i, valid;
     struct cwiid_state state;
