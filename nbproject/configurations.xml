@@ -5,6 +5,9 @@
                    displayName="Header Files"
                    projectFiles="true">
     </logicalFolder>
+    <logicalFolder name="f1" displayName="Plugin" projectFiles="true">
+      <itemPath>trackmii_plugin.c</itemPath>
+    </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
@@ -46,6 +49,13 @@
       <item path="trackmii.c">
         <itemTool>0</itemTool>
       </item>
+      <item path="trackmii_plugin.c">
+        <itemExcluded>true</itemExcluded>
+        <itemTool>0</itemTool>
+        <cCompilerTool>
+          <commandLine>-DLIN=1</commandLine>
+        </cCompilerTool>
+      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
@@ -72,6 +82,46 @@
         <itemTool>0</itemTool>
       </item>
       <item path="trackmii.c">
+        <itemTool>0</itemTool>
+      </item>
+      <item path="trackmii_plugin.c">
+        <itemTool>0</itemTool>
+      </item>
+    </conf>
+    <conf name="Plugin" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <cCompilerTool>
+          <stripSymbols>true</stripSymbols>
+          <includeDirectories>
+            <directoryPath>../SDK/CHeaders/XPLM</directoryPath>
+            <directoryPath>../SDK/CHeaders/Widgets</directoryPath>
+          </includeDirectories>
+          <commandLine>-DLIN=1</commandLine>
+          <warningLevel>2</warningLevel>
+        </cCompilerTool>
+        <linkerTool>
+          <output>dist/Plugin/${PLATFORM}/trackmii_plugin.xpl</output>
+          <stripSymbols>true</stripSymbols>
+          <linkerLibItems>
+            <linkerLibLibItem>cwiid</linkerLibLibItem>
+            <linkerLibLibItem>m</linkerLibLibItem>
+          </linkerLibItems>
+          <commandLine>-shared</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="pose.c">
+        <itemTool>0</itemTool>
+      </item>
+      <item path="trackmii.c">
+        <itemExcluded>true</itemExcluded>
+        <itemTool>0</itemTool>
+      </item>
+      <item path="trackmii_plugin.c">
         <itemTool>0</itemTool>
       </item>
     </conf>

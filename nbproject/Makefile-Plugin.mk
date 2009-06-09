@@ -24,16 +24,15 @@ PLATFORM=GNU-Linux-x86
 include Makefile
 
 # Object Directory
-OBJECTDIR=build/Release/${PLATFORM}
+OBJECTDIR=build/Plugin/${PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/trackmii.o \
 	${OBJECTDIR}/pose.o \
 	${OBJECTDIR}/trackmii_plugin.o
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-DLIN=1
 
 # CC Compiler Flags
 CCFLAGS=
@@ -43,38 +42,33 @@ CXXFLAGS=
 FFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-lcwiid -lm
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	${MAKE}  -f nbproject/Makefile-Release.mk dist/Release/${PLATFORM}/trackmii
+	${MAKE}  -f nbproject/Makefile-Plugin.mk dist/Plugin/${PLATFORM}/trackmii_plugin.xpl
 
-dist/Release/${PLATFORM}/trackmii: ${OBJECTFILES}
-	${MKDIR} -p dist/Release/${PLATFORM}
-	${LINK.c} -o dist/Release/${PLATFORM}/trackmii ${OBJECTFILES} ${LDLIBSOPTIONS} 
-
-${OBJECTDIR}/trackmii.o: trackmii.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii.o trackmii.c
+dist/Plugin/${PLATFORM}/trackmii_plugin.xpl: ${OBJECTFILES}
+	${MKDIR} -p dist/Plugin/${PLATFORM}
+	${LINK.c} -shared -o dist/Plugin/${PLATFORM}/trackmii_plugin.xpl -s ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/pose.o: pose.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/pose.o pose.c
+	$(COMPILE.c) -g -Wall -s -I../SDK/CHeaders/XPLM -I../SDK/CHeaders/Widgets -MMD -MP -MF $@.d -o ${OBJECTDIR}/pose.o pose.c
 
 ${OBJECTDIR}/trackmii_plugin.o: trackmii_plugin.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii_plugin.o trackmii_plugin.c
+	$(COMPILE.c) -g -Wall -s -I../SDK/CHeaders/XPLM -I../SDK/CHeaders/Widgets -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii_plugin.o trackmii_plugin.c
 
 # Subprojects
 .build-subprojects:
 
 # Clean Targets
 .clean-conf:
-	${RM} -r build/Release
-	${RM} dist/Release/${PLATFORM}/trackmii
+	${RM} -r build/Plugin
+	${RM} dist/Plugin/${PLATFORM}/trackmii_plugin.xpl
 
 # Subprojects
 .clean-subprojects:
