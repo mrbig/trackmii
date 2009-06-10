@@ -19,6 +19,9 @@
 #include "XPLMGraphics.h"
 #include "XPLMCamera.h"
 #include "XPLMDataAccess.h"
+#include "XPLMMenus.h"
+#include "XPWidgets.h"
+#include "XPStandardWidgets.h"
 #include "pose.h"
 
 /*
@@ -33,13 +36,14 @@ XPLMHotKeyID	gHotKey = NULL;
 XPLMWindowID    gWindow = NULL;
 
 // Wiimote handler
-cwiid_wiimote_t *gWiimote;
+cwiid_wiimote_t *gWiimote = NULL;
 
 int gFreeView = 0;
 
 // This is the current head pose
 TPose gPose;
 
+// Different callbacks
 void MyDrawWindowCallback( XPLMWindowID inWindowID,    
                            void * inRefcon);
 
@@ -49,8 +53,21 @@ int MyDrawingCallback (
                                    XPLMDrawingPhase     inPhase,    
                                    int                  inIsBefore,    
                                    void *               inRefcon);
+
+int SetupWindowHandler(XPWidgetMessage inMessage,
+                       XPWidgetID      inWidget,
+                       long            inParam1,
+                       long            inParam2);
+
+void MenuHandler(void *, void *);
+
+// Datarefs in user
 XPLMDataRef gPilotHeadYawDf = NULL;
 XPLMDataRef gPilotHeadPitchDf = NULL;
+
+// Widgets we use
+XPLMMenuID menuId;
+XPWidgetID setupWindowWidget = NULL;
 
 /*
  * XPluginStart
@@ -116,6 +133,11 @@ PLUGIN_API int XPluginStart(
     gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
 
     /* Registering into the menu */
+    int item;
+    
+    item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "TrackMii", NULL, 1);
+    menuId = XPLMCreateMenu("TrackMii setup", XPLMFindPluginsMenu(), item, MenuHandler, NULL);
+    XPLMAppendMenuItem(menuId, "Setup TrackMii", (void *)"setup", 1);
 
     /* Initializing cap model */
     dimensions3PtsCap[0].x = 70;
@@ -138,6 +160,7 @@ PLUGIN_API int XPluginStart(
 PLUGIN_API void    XPluginStop(void)
 {
     XPLMDestroyWindow(gWindow);
+    XPLMDestroyMenu(menuId);
     if (gWiimote) cwiid_close(gWiimote);
     fprintf(stderr, "Wiimote closed\n");
 }
@@ -256,5 +279,56 @@ int MyDrawingCallback (
 void	MyHotKeyCallback(void *               inRefcon)
 {
     gFreeView = 1-gFreeView;
+}
+
+/**
+ * Setup window handler
+ */
+int SetupWindowHandler(XPWidgetMessage inMessage,
+                       XPWidgetID      inWidget,
+                       long            inParam1,
+                       long            inParam2)
+{
+    //fprintf(stderr, "Got event\n");
+    if (inMessage == xpMessage_CloseButtonPushed)
+    {
+        fprintf(stderr, "Got close button event\n");
+        XPHideWidget(setupWindowWidget);
+    }
+    return 0;
+}
+
+/**
+ * Here we create the setup window, and all it's sub widgets
+ */
+void CreateSetupWindow()
+{
+    setupWindowWidget = XPCreateWidget(100, 650, 450, 400,
+                                       1, // Visible
+                                       "TrackMii Setup", // desc
+                                       1, // root
+                                       NULL,
+                                       xpWidgetClass_MainWindow);
+    XPSetWidgetProperty(setupWindowWidget, xpProperty_MainWindowHasCloseBoxes, 1);
+
+    XPAddWidgetCallback(setupWindowWidget, SetupWindowHandler);
+}
+
+
+/**
+ * Menu callback
+ */
+void MenuHandler(void *mRef, void * iRef)
+{
+    if (!strcmp((char *) iRef, "setup")) {
+        fprintf(stderr, "menu clicked\n");
+        if (!setupWindowWidget) {
+            fprintf(stderr, "Creating menu\n");
+            CreateSetupWindow();
+        } else {
+            fprintf(stderr, "Showing widget\n");
+            XPShowWidget(setupWindowWidget);
+        }
+    }
 }
 

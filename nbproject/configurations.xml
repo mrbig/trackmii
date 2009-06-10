@@ -123,6 +123,9 @@
       </item>
       <item path="trackmii_plugin.c">
         <itemTool>0</itemTool>
+        <cCompilerTool>
+          <commandLine>-DWIIMOTE_DISABLED=1</commandLine>
+        </cCompilerTool>
       </item>
     </conf>
   </confs>
