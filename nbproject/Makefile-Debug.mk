@@ -29,7 +29,8 @@ OBJECTDIR=build/Debug/${PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/trackmii.o \
-	${OBJECTDIR}/pose.o
+	${OBJECTDIR}/pose.o \
+	${OBJECTDIR}/gui.o
 
 # C Compiler Flags
 CFLAGS=
@@ -61,6 +62,11 @@ ${OBJECTDIR}/pose.o: pose.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/pose.o pose.c
+
+${OBJECTDIR}/gui.o: gui.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/gui.o gui.c
 
 # Subprojects
 .build-subprojects:

@@ -30,6 +30,7 @@ OBJECTDIR=build/Release/${PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/trackmii.o \
 	${OBJECTDIR}/pose.o \
+	${OBJECTDIR}/gui.o \
 	${OBJECTDIR}/trackmii_plugin.o
 
 # C Compiler Flags
@@ -62,6 +63,11 @@ ${OBJECTDIR}/pose.o: pose.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/pose.o pose.c
+
+${OBJECTDIR}/gui.o: gui.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/gui.o gui.c
 
 ${OBJECTDIR}/trackmii_plugin.o: trackmii_plugin.c 
 	${MKDIR} -p ${OBJECTDIR}

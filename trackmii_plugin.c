@@ -1,16 +1,3 @@
-/*
- * HellWorld.c
- * 
- * This plugin implements the canonical first program.  In this case, we will 
- * create a window that has the text hello-world in it.  As an added bonus
- * the  text will change to 'This is a plugin' while the mouse is held down
- * in the window.  
- * 
- * This plugin demonstrates creating a window and writing mouse and drawing
- * callbacks for that window.
- * 
- */
-
 #include <stdio.h>
 #include <string.h>
 #include <cwiid.h>
@@ -19,10 +6,8 @@
 #include "XPLMGraphics.h"
 #include "XPLMCamera.h"
 #include "XPLMDataAccess.h"
-#include "XPLMMenus.h"
-#include "XPWidgets.h"
-#include "XPStandardWidgets.h"
 #include "pose.h"
+#include "gui.h"
 
 /*
  * Global Variables.  We will store our single window globally.  We also record
@@ -54,20 +39,12 @@ int MyDrawingCallback (
                                    int                  inIsBefore,    
                                    void *               inRefcon);
 
-int SetupWindowHandler(XPWidgetMessage inMessage,
-                       XPWidgetID      inWidget,
-                       long            inParam1,
-                       long            inParam2);
 
-void MenuHandler(void *, void *);
 
-// Datarefs in user
+// Datarefs in use
 XPLMDataRef gPilotHeadYawDf = NULL;
 XPLMDataRef gPilotHeadPitchDf = NULL;
 
-// Widgets we use
-XPLMMenuID menuId;
-XPWidgetID setupWindowWidget = NULL;
 
 /*
  * XPluginStart
@@ -132,12 +109,10 @@ PLUGIN_API int XPluginStart(
     gPilotHeadYawDf = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
     gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
 
-    /* Registering into the menu */
-    int item;
+    /* Gui initialization */
+    InitGui();
     
-    item = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "TrackMii", NULL, 1);
-    menuId = XPLMCreateMenu("TrackMii setup", XPLMFindPluginsMenu(), item, MenuHandler, NULL);
-    XPLMAppendMenuItem(menuId, "Setup TrackMii", (void *)"setup", 1);
+    
 
     /* Initializing cap model */
     dimensions3PtsCap[0].x = 70;
@@ -160,7 +135,7 @@ PLUGIN_API int XPluginStart(
 PLUGIN_API void    XPluginStop(void)
 {
     XPLMDestroyWindow(gWindow);
-    XPLMDestroyMenu(menuId);
+    DestroyGui();
     if (gWiimote) cwiid_close(gWiimote);
     fprintf(stderr, "Wiimote closed\n");
 }
@@ -281,54 +256,4 @@ void	MyHotKeyCallback(void *               inRefcon)
     gFreeView = 1-gFreeView;
 }
 
-/**
- * Setup window handler
- */
-int SetupWindowHandler(XPWidgetMessage inMessage,
-                       XPWidgetID      inWidget,
-                       long            inParam1,
-                       long            inParam2)
-{
-    //fprintf(stderr, "Got event\n");
-    if (inMessage == xpMessage_CloseButtonPushed)
-    {
-        fprintf(stderr, "Got close button event\n");
-        XPHideWidget(setupWindowWidget);
-    }
-    return 0;
-}
-
-/**
- * Here we create the setup window, and all it's sub widgets
- */
-void CreateSetupWindow()
-{
-    setupWindowWidget = XPCreateWidget(100, 650, 450, 400,
-                                       1, // Visible
-                                       "TrackMii Setup", // desc
-                                       1, // root
-                                       NULL,
-                                       xpWidgetClass_MainWindow);
-    XPSetWidgetProperty(setupWindowWidget, xpProperty_MainWindowHasCloseBoxes, 1);
-
-    XPAddWidgetCallback(setupWindowWidget, SetupWindowHandler);
-}
-
-
-/**
- * Menu callback
- */
-void MenuHandler(void *mRef, void * iRef)
-{
-    if (!strcmp((char *) iRef, "setup")) {
-        fprintf(stderr, "menu clicked\n");
-        if (!setupWindowWidget) {
-            fprintf(stderr, "Creating menu\n");
-            CreateSetupWindow();
-        } else {
-            fprintf(stderr, "Showing widget\n");
-            XPShowWidget(setupWindowWidget);
-        }
-    }
-}
 
