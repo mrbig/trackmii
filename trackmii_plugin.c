@@ -236,10 +236,8 @@ int MyDrawingCallback (
     }
 
     if (valid == 3 && !AlterPose(pnts, &gPose)) {
-        fprintf(stderr, "d\n");
         PoseToDegrees(&gPose);
         SmoothPose(&gPose);
-        fprintf(stderr, "e\n");
         XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
         XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
 

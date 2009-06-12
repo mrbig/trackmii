@@ -45,6 +45,9 @@ void SmoothPose(TPose *pose);
 
 float CalculateHeadYaw(point2D pnts[3]);
 
+int getSmoothing();
+
+void setSmoothing(int value);
 
 
 #ifdef	__cplusplus

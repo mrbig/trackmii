@@ -19,7 +19,8 @@ float FZScalar = 1320;
 
 TPose oldpose;
 
-#define SMOOTHING 15
+int gSmoothing = 15;
+
 #define GLOBAL_SMOOTHING 100
 
 void Initialize3PCapModel(point3Df dimensions3PtsCap[3]) {
@@ -229,7 +230,7 @@ void SmoothPose(TPose *pose) {
     float SmoothingSize;
     TPose delta;
 
-    SmoothingSize =  20 * SMOOTHING * GLOBAL_SMOOTHING * 0.001;
+    SmoothingSize =  20 * gSmoothing * GLOBAL_SMOOTHING * 0.001;
 
     delta.yaw = abs(pose->yaw - oldpose.yaw);
     delta.roll = abs(pose->roll - oldpose.roll);
@@ -298,4 +299,13 @@ float CalculateHeadYaw(point2D pnts[3]) {
     yaw = yaw * (yaw/90) * (yaw/90);
 
     return yaw;
+}
+
+int getSmoothing()
+{
+    return gSmoothing;
+}
+void setSmoothing( value )
+{
+    gSmoothing = value;
 }
