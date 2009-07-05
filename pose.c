@@ -21,6 +21,8 @@ TPose oldpose;
 
 int gSmoothing = 15;
 
+float rollRespCurve[100000], yawRespCurve[100000], pitchRespCurve[100000];
+
 #define GLOBAL_SMOOTHING 100
 
 void Initialize3PCapModel(point3Df dimensions3PtsCap[3]) {
@@ -71,6 +73,47 @@ void Initialize3PCapModel(point3Df dimensions3PtsCap[3]) {
 
     yawAlignModel = atan( dimensions3PtsCap[0].x / dimensions3PtsCap[0].z );
     pitchAlignModel = atan( dimensions3PtsCap[0].y / dimensions3PtsCap[0].z );
+}
+
+void InitializeCurve() {
+    point2D P1, C1, C2, P2;
+    int x2_prev, x2_curr, i;
+    float t, k, x2, y2;
+
+    P1.x = 0;
+    P1.y = 0;
+
+    C1.x = 15;
+    C1.y = 2;
+
+    C2.x = 20;
+    C2.y = 2;
+
+    P2.x = 99;
+    P2.y = 320;
+
+    t=0;
+    k=0.001;
+    x2_prev = 0;
+
+    do {
+
+        x2 = (P1.x+t*(-P1.x*3+t*(3*P1.x - P1.x*t)))+
+             t*(3*C1.x+t*(-6*C1.x+C1.x*3*t))+
+             t*t*(C2.x*3-C2.x*3*t)+ P2.x*t*t*t;
+
+        y2 = (P1.y+t*(-P1.y*3+t*(3*P1.y- P1.y*t)))+
+             t*(3*C1.y+t*(-6*C1.y+C1.y*3*t))+
+             t*t*(C2.y*3-C2.y*3*t)+ P2.y*t*t*t;
+
+        x2_curr = floor(x2*1000);
+        for (i=0; i<(x2_curr-x2_prev); i++) {
+            yawRespCurve[x2_prev + i] = y2;
+            fprintf(stderr, "%d -> %f\n", x2_prev+i, y2);
+        }
+        x2_prev = x2_curr;
+        t += k;
+    } while ( t<= 1+k);
 }
 
 /**
@@ -247,6 +290,13 @@ void SmoothPose(TPose *pose) {
     oldpose.yaw = pose->yaw;
     oldpose.roll = pose->roll;
     oldpose.pitch = pose->pitch;
+
+    // Translation
+    if (pose->yaw>=0) {
+        pose->yaw = yawRespCurve[(int)floor(pose->yaw*1000)];
+    } else {
+        pose->yaw = -1 * yawRespCurve[(int)floor(-1*(pose->yaw*1000))];
+    }
 }
 
 /**

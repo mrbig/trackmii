@@ -37,6 +37,8 @@ typedef struct {
 
 void Initialize3PCapModel(point3Df dimensions3PtsCap[3]);
 
+void InitializeCurve();
+
 int AlterPose(point2D pnts[3], TPose *pose);
 
 void PoseToDegrees(TPose *pose);

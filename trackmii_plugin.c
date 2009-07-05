@@ -119,6 +119,7 @@ PLUGIN_API int XPluginStart(
     dimensions3PtsCap[0].y = 80;
     dimensions3PtsCap[0].z = 100;
 
+    InitializeCurve();
     Initialize3PCapModel(dimensions3PtsCap);
 
     /* We must return 1 to indicate successful initialization, otherwise we
