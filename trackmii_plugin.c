@@ -89,10 +89,11 @@ PLUGIN_API int XPluginStart(
 
 #ifndef WIIMOTE_DISABLED
     if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
-        return 0;
+    //    return 0;
+    } else {
+        cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
+        cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
     }
-    cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
-    cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
 #endif
     
     fprintf(stderr, "Wiimote connected\n");
