@@ -82,6 +82,7 @@ PLUGIN_API int XPluginStart(
      */
     bdaddr_t bdaddr;
     point3Df dimensions3PtsCap[3];
+    translationCfg trcfg;
     
     bdaddr = *BDADDR_ANY;
     fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
@@ -119,8 +120,19 @@ PLUGIN_API int XPluginStart(
     dimensions3PtsCap[0].y = 80;
     dimensions3PtsCap[0].z = 100;
 
-    InitializeCurve();
     Initialize3PCapModel(dimensions3PtsCap);
+
+    // Initialize translation
+    trcfg.P1.x = 0;   trcfg.P1.y = 0;
+
+    trcfg.C1.x = 15;  trcfg.C1.y = 2;
+
+    trcfg.C2.x = 20;  trcfg.C2.y = 2;
+
+    trcfg.P2.x = 99;  trcfg.P2.y = 320;
+    
+    InitializeCurve(DOF_YAW, trcfg);
+    InitializeCurve(DOF_PITCH, trcfg);
 
     /* We must return 1 to indicate successful initialization, otherwise we
      * will not be called back again. */
