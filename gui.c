@@ -5,6 +5,7 @@
 #include "XPLMMenus.h"
 #include "XPWidgets.h"
 #include "XPStandardWidgets.h"
+#include "trackmii_plugin.h"
 #include "pose.h"
 
 int SetupWindowHandler(XPWidgetMessage inMessage,
@@ -66,9 +67,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
 {
     char buff[255];
     long tmp;
+    basicTranslationCfg trcfg;
     if (inMessage == xpMessage_CloseButtonPushed)
     {
-        fprintf(stderr, "Got close button event\n");
         XPHideWidget(setupWindowWidget);
     }
     else if (inMessage == xpMsg_ScrollBarSliderPositionChanged)
@@ -88,7 +89,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         else if (inParam1 == (long)yawDeadzoneScrollbar) {
             tmp = XPGetWidgetProperty(yawDeadzoneScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
-            //setSmoothing(tmp);
+            trcfg = getTranslationCfg(DOF_YAW);
+            trcfg.deadzone = tmp;
+            setTranslationCfg(DOF_YAW, &trcfg);
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(yawDeadzoneValueCaption, buff);
@@ -96,7 +99,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         else if (inParam1 == (long)yawResponseScrollbar) {
             tmp = XPGetWidgetProperty(yawResponseScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
-            //setSmoothing(tmp);
+            trcfg = getTranslationCfg(DOF_YAW);
+            trcfg.response = tmp;
+            setTranslationCfg(DOF_YAW, &trcfg);
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(yawResponseValueCaption, buff);
@@ -104,7 +109,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         else if (inParam1 == (long)yawAmplificationScrollbar) {
             tmp = XPGetWidgetProperty(yawAmplificationScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
-            //setSmoothing(tmp);
+            trcfg = getTranslationCfg(DOF_YAW);
+            trcfg.amplification = tmp;
+            setTranslationCfg(DOF_YAW, &trcfg);
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(yawAmplificationValueCaption, buff);
@@ -114,7 +121,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         else if (inParam1 == (long)pitchDeadzoneScrollbar) {
             tmp = XPGetWidgetProperty(pitchDeadzoneScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
-            //setSmoothing(tmp);
+            trcfg = getTranslationCfg(DOF_PITCH);
+            trcfg.deadzone = tmp;
+            setTranslationCfg(DOF_PITCH, &trcfg);
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(pitchDeadzoneValueCaption, buff);
@@ -122,7 +131,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         else if (inParam1 == (long)pitchResponseScrollbar) {
             tmp = XPGetWidgetProperty(pitchResponseScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
-            //setSmoothing(tmp);
+            trcfg = getTranslationCfg(DOF_PITCH);
+            trcfg.response = tmp;
+            setTranslationCfg(DOF_PITCH, &trcfg);
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(pitchResponseValueCaption, buff);
@@ -130,7 +141,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         else if (inParam1 == (long)pitchAmplificationScrollbar) {
             tmp = XPGetWidgetProperty(pitchAmplificationScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
-            //setSmoothing(tmp);
+            trcfg = getTranslationCfg(DOF_PITCH);
+            trcfg.amplification = tmp;
+            setTranslationCfg(DOF_PITCH, &trcfg);
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(pitchAmplificationValueCaption, buff);
@@ -179,6 +192,8 @@ void CreateScrollbar(XPWidgetID *setupWindowWidget,
 void CreateSetupWindow()
 {
     int x, y, x2, y2, w, h;
+    basicTranslationCfg trcfg;
+
     x = 100;
     y = 650;
     w = 600;
@@ -205,44 +220,48 @@ void CreateSetupWindow()
     /* yaw deadzone scrollbar */
     XPCreateWidget(x+10, y - 70, x + 80, y-90, 1, "Yaw translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
 
+    trcfg = getTranslationCfg(DOF_YAW);
+
     CreateScrollbar(setupWindowWidget, &yawDeadzoneScrollbar, &yawDeadzoneValueCaption,
             "Deadzone:",
             x+10, y-90, x+280,
-            15,
+            trcfg.deadzone,
             0, 30);
 
     CreateScrollbar(setupWindowWidget, &yawResponseScrollbar, &yawResponseValueCaption,
             "Response:",
             x+10, y-120, x+280,
-            5,
+            trcfg.response,
             0, 80);
 
     CreateScrollbar(setupWindowWidget, &yawAmplificationScrollbar, &yawAmplificationValueCaption,
             "Amplification:",
             x+10, y-150, x+280,
-            320,
-            90, 420);
+            trcfg.amplification,
+            0, 100);
 
     /* pitch deadzone scrollbar */
     XPCreateWidget(x+300, y - 70, x + 380, y-90, 1, "Pitch translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
 
+    trcfg = getTranslationCfg(DOF_PITCH);
+
     CreateScrollbar(setupWindowWidget, &pitchDeadzoneScrollbar, &pitchDeadzoneValueCaption,
             "Deadzone:",
             x+310, y-90, x2-10,
-            15,
+            trcfg.deadzone,
             0, 30);
 
     CreateScrollbar(setupWindowWidget, &pitchResponseScrollbar, &pitchResponseValueCaption,
             "Response:",
             x+310, y-120, x2-10,
-            5,
+            trcfg.response,
             0, 80);
 
     CreateScrollbar(setupWindowWidget, &pitchAmplificationScrollbar, &pitchAmplificationValueCaption,
             "Amplification:",
             x+310, y-150, x2-10,
-            320,
-            90, 420);
+            trcfg.amplification,
+            0, 100);
 
     
     /* Adding callback for window events */
@@ -257,12 +276,9 @@ void CreateSetupWindow()
 void MenuHandler(void *mRef, void * iRef)
 {
     if (!strcmp((char *) iRef, "setup")) {
-        fprintf(stderr, "menu clicked\n");
         if (!setupWindowWidget) {
-            fprintf(stderr, "Creating menu\n");
             CreateSetupWindow();
         } else {
-            fprintf(stderr, "Showing widget\n");
             XPShowWidget(setupWindowWidget);
         }
     }

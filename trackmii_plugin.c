@@ -6,6 +6,7 @@
 #include "XPLMGraphics.h"
 #include "XPLMCamera.h"
 #include "XPLMDataAccess.h"
+#include "trackmii_plugin.h"
 #include "pose.h"
 #include "gui.h"
 
@@ -28,6 +29,9 @@ int gFreeView = 0;
 // This is the current head pose
 TPose gPose;
 
+// Translation config
+basicTranslationCfg gTranslationCfg[2];
+
 // Different callbacks
 void MyDrawWindowCallback( XPLMWindowID inWindowID,    
                            void * inRefcon);
@@ -39,7 +43,8 @@ int MyDrawingCallback (
                                    int                  inIsBefore,    
                                    void *               inRefcon);
 
-
+// Forward references
+void SetupTranslationCurve(int, basicTranslationCfg cfg);
 
 // Datarefs in use
 XPLMDataRef gPilotHeadYawDf = NULL;
@@ -82,7 +87,6 @@ PLUGIN_API int XPluginStart(
      */
     bdaddr_t bdaddr;
     point3Df dimensions3PtsCap[3];
-    translationCfg trcfg;
     
     bdaddr = *BDADDR_ANY;
     fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
@@ -124,17 +128,17 @@ PLUGIN_API int XPluginStart(
     Initialize3PCapModel(dimensions3PtsCap);
 
     // Initialize translation
-    trcfg.P1.x = 0;   trcfg.P1.y = 0;
+    gTranslationCfg[DOF_YAW].deadzone = 15;
+    gTranslationCfg[DOF_YAW].response = 5;
+    gTranslationCfg[DOF_YAW].amplification = 25;
 
-    trcfg.C1.x = 15;  trcfg.C1.y = 2;
+    gTranslationCfg[DOF_PITCH].deadzone = 15;
+    gTranslationCfg[DOF_PITCH].response = 5;
+    gTranslationCfg[DOF_PITCH].amplification = 25;
 
-    trcfg.C2.x = 20;  trcfg.C2.y = 2;
-
-    trcfg.P2.x = 99;  trcfg.P2.y = 320;
+    SetupTranslationCurve(DOF_YAW, gTranslationCfg[DOF_YAW]);
+    SetupTranslationCurve(DOF_PITCH, gTranslationCfg[DOF_PITCH]);
     
-    InitializeCurve(DOF_YAW, trcfg);
-    InitializeCurve(DOF_PITCH, trcfg);
-
     /* We must return 1 to indicate successful initialization, otherwise we
      * will not be called back again. */
     return 1;
@@ -268,4 +272,43 @@ void	MyHotKeyCallback(void *               inRefcon)
     gFreeView = 1-gFreeView;
 }
 
+void SetupTranslationCurve(int dof, basicTranslationCfg cfg) {
+    translationCfg trcfg;
 
+    trcfg.P1.x = 0;   trcfg.P1.y = 0;
+
+    trcfg.C1.x = cfg.deadzone;  trcfg.C1.y = 2;
+
+    trcfg.C2.x = min(cfg.deadzone + cfg.response, 99);  trcfg.C2.y = 2+sqrt(cfg.response);
+
+    trcfg.P2.x = 99;  trcfg.P2.y = 220+4*cfg.amplification;
+
+    //*
+    fprintf(stderr, "New translation config for dof %d is:\n", dof);
+    fprintf(stderr, "P1.x=%d P1.y=%d\n", trcfg.P1.x, trcfg.P1.y);
+    fprintf(stderr, "C1.x=%d C1.y=%d\n", trcfg.C1.x, trcfg.C1.y);
+    fprintf(stderr, "C2.x=%d C2.y=%d\n", trcfg.C2.x, trcfg.C2.y);
+    fprintf(stderr, "P2.x=%d P2.y=%d\n", trcfg.P2.x, trcfg.P2.y);
+     //*/
+
+    InitializeCurve(dof, trcfg);
+}
+
+/**
+ * Returns current translation setup for the given DoF
+ */
+basicTranslationCfg getTranslationCfg(int dof) {
+    return gTranslationCfg[dof];
+}
+
+/**
+ * Sets new translation setup fot the given DoF
+ * Reinitializes translation array inmediately
+ */
+void setTranslationCfg(int dof, basicTranslationCfg *cfg) {
+    gTranslationCfg[dof].deadzone = cfg->deadzone;
+    gTranslationCfg[dof].response = cfg->response;
+    gTranslationCfg[dof].amplification = cfg->amplification;
+
+    SetupTranslationCurve(dof, gTranslationCfg[dof]);
+}
