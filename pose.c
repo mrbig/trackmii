@@ -99,7 +99,7 @@ void InitializeCurve(int dof, translationCfg cfg) {
         x2_curr = floor(x2*1000);
         for (i=0; i<(x2_curr-x2_prev); i++) {
             RespCurve[dof][x2_prev + i] = y2;
-            fprintf(stderr, "%d -> %f\n", x2_prev+i, y2);
+            //fprintf(stderr, "%d -> %f\n", x2_prev+i, y2);
         }
         x2_prev = x2_curr;
         t += k;

@@ -20,6 +20,20 @@ XPWidgetID setupWindowWidget = NULL;
 XPWidgetID smoothingScrollbar = NULL;
 XPWidgetID smoothingValueCaption = NULL;
 
+XPWidgetID yawDeadzoneValueCaption = NULL;
+XPWidgetID yawDeadzoneScrollbar = NULL;
+XPWidgetID yawResponseValueCaption = NULL;
+XPWidgetID yawResponseScrollbar = NULL;
+XPWidgetID yawAmplificationValueCaption = NULL;
+XPWidgetID yawAmplificationScrollbar = NULL;
+
+XPWidgetID pitchDeadzoneValueCaption = NULL;
+XPWidgetID pitchDeadzoneScrollbar = NULL;
+XPWidgetID pitchResponseValueCaption = NULL;
+XPWidgetID pitchResponseScrollbar = NULL;
+XPWidgetID pitchAmplificationValueCaption = NULL;
+XPWidgetID pitchAmplificationScrollbar = NULL;
+
 /**
  * Initializing menu, and other gui stuff
  */
@@ -42,7 +56,8 @@ void DestroyGui()
 }
 
 /**
- * Setup window handler
+ * Setup window handler - receives all events
+ * to the setup window.
  */
 int SetupWindowHandler(XPWidgetMessage inMessage,
                        XPWidgetID      inWidget,
@@ -61,8 +76,6 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
         
 
         if (inParam1 == (long)smoothingScrollbar) {
-            
-
             tmp = XPGetWidgetProperty(smoothingScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
             setSmoothing(tmp);
@@ -70,8 +83,94 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(smoothingValueCaption, buff);
         }
+
+        /* yaw scrollbars */
+        else if (inParam1 == (long)yawDeadzoneScrollbar) {
+            tmp = XPGetWidgetProperty(yawDeadzoneScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
+
+            //setSmoothing(tmp);
+
+            sprintf(buff, "%ld", tmp);
+            XPSetWidgetDescriptor(yawDeadzoneValueCaption, buff);
+        }
+        else if (inParam1 == (long)yawResponseScrollbar) {
+            tmp = XPGetWidgetProperty(yawResponseScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
+
+            //setSmoothing(tmp);
+
+            sprintf(buff, "%ld", tmp);
+            XPSetWidgetDescriptor(yawResponseValueCaption, buff);
+        }
+        else if (inParam1 == (long)yawAmplificationScrollbar) {
+            tmp = XPGetWidgetProperty(yawAmplificationScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
+
+            //setSmoothing(tmp);
+
+            sprintf(buff, "%ld", tmp);
+            XPSetWidgetDescriptor(yawAmplificationValueCaption, buff);
+        }
+
+        /* pitch scrollbars */
+        else if (inParam1 == (long)pitchDeadzoneScrollbar) {
+            tmp = XPGetWidgetProperty(pitchDeadzoneScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
+
+            //setSmoothing(tmp);
+
+            sprintf(buff, "%ld", tmp);
+            XPSetWidgetDescriptor(pitchDeadzoneValueCaption, buff);
+        }
+        else if (inParam1 == (long)pitchResponseScrollbar) {
+            tmp = XPGetWidgetProperty(pitchResponseScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
+
+            //setSmoothing(tmp);
+
+            sprintf(buff, "%ld", tmp);
+            XPSetWidgetDescriptor(pitchResponseValueCaption, buff);
+        }
+        else if (inParam1 == (long)pitchAmplificationScrollbar) {
+            tmp = XPGetWidgetProperty(pitchAmplificationScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
+
+            //setSmoothing(tmp);
+
+            sprintf(buff, "%ld", tmp);
+            XPSetWidgetDescriptor(pitchAmplificationValueCaption, buff);
+        }
     }
     return 0;
+}
+
+/**
+ * Creating a scrollbar handle, as we like it
+ */
+void CreateScrollbar(XPWidgetID *setupWindowWidget,
+                     XPWidgetID *scrollbar,
+                     XPWidgetID *valueCaption,
+                     char *label,
+                     int x, int y, int x2,
+                     int value,
+                     int min,
+                     int max)
+{
+    char buff[255];
+
+    XPCreateWidget(x, y, x + 80, y-20, 1, label, 0, setupWindowWidget, xpWidgetClass_Caption);
+    XPCreateWidget(x2-30, y, x2, y-20, 1, "max", 0, setupWindowWidget, xpWidgetClass_Caption);
+
+    sprintf(buff, "%d", value);
+    *valueCaption =
+            XPCreateWidget(x+160, y+5, x+170, y, 1, buff, 0, setupWindowWidget, xpWidgetClass_Caption);
+
+    *scrollbar = XPCreateWidget(x + 80, y, x2 - 30, y - 20,
+                                        1,
+                                        label,
+                                        0,
+                                        setupWindowWidget,
+                                        xpWidgetClass_ScrollBar);
+
+    XPSetWidgetProperty(*scrollbar, xpProperty_ScrollBarType, xpScrollBarTypeSlider);
+    XPSetWidgetProperty(*scrollbar, xpProperty_ScrollBarMin, min);
+    XPSetWidgetProperty(*scrollbar, xpProperty_ScrollBarMax, max);
+    XPSetWidgetProperty(*scrollbar, xpProperty_ScrollBarSliderPosition, value);
 }
 
 /**
@@ -80,10 +179,9 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
 void CreateSetupWindow()
 {
     int x, y, x2, y2, w, h;
-    char buff[255];
     x = 100;
     y = 650;
-    w = 350;
+    w = 600;
     h = 250;
     x2 = x + w;
     y2 = y - h;
@@ -96,28 +194,61 @@ void CreateSetupWindow()
                                        xpWidgetClass_MainWindow);
     XPSetWidgetProperty(setupWindowWidget, xpProperty_MainWindowHasCloseBoxes, 1);
 
-    /* scrollbar */
-    XPCreateWidget(x+10, y - 40, x + 80, y-60, 1, "Smoothing:", 0, setupWindowWidget, xpWidgetClass_Caption);
-    XPCreateWidget(x2-40, y - 40, x2 - 10, y-60, 1, "max", 0, setupWindowWidget, xpWidgetClass_Caption);
+    /* smoothing scrollbar */
+    CreateScrollbar(setupWindowWidget, &smoothingScrollbar, &smoothingValueCaption,
+            "Smoothing:",
+            x+10, y-40, x+350,
+            getSmoothing(),
+            1, 100);
 
-    sprintf(buff, "%d", getSmoothing());
-    smoothingValueCaption =
-            XPCreateWidget(x+170, y-30, x+180, y-40, 1, buff, 0, setupWindowWidget, xpWidgetClass_Caption);
+
+    /* yaw deadzone scrollbar */
+    XPCreateWidget(x+10, y - 70, x + 80, y-90, 1, "Yaw translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
+
+    CreateScrollbar(setupWindowWidget, &yawDeadzoneScrollbar, &yawDeadzoneValueCaption,
+            "Deadzone:",
+            x+10, y-90, x+280,
+            15,
+            0, 30);
+
+    CreateScrollbar(setupWindowWidget, &yawResponseScrollbar, &yawResponseValueCaption,
+            "Response:",
+            x+10, y-120, x+280,
+            5,
+            0, 80);
+
+    CreateScrollbar(setupWindowWidget, &yawAmplificationScrollbar, &yawAmplificationValueCaption,
+            "Amplification:",
+            x+10, y-150, x+280,
+            320,
+            90, 420);
+
+    /* pitch deadzone scrollbar */
+    XPCreateWidget(x+300, y - 70, x + 380, y-90, 1, "Pitch translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
+
+    CreateScrollbar(setupWindowWidget, &pitchDeadzoneScrollbar, &pitchDeadzoneValueCaption,
+            "Deadzone:",
+            x+310, y-90, x2-10,
+            15,
+            0, 30);
+
+    CreateScrollbar(setupWindowWidget, &pitchResponseScrollbar, &pitchResponseValueCaption,
+            "Response:",
+            x+310, y-120, x2-10,
+            5,
+            0, 80);
+
+    CreateScrollbar(setupWindowWidget, &pitchAmplificationScrollbar, &pitchAmplificationValueCaption,
+            "Amplification:",
+            x+310, y-150, x2-10,
+            320,
+            90, 420);
+
     
-    smoothingScrollbar = XPCreateWidget(x + 80, y - 40, x2 - 40, y - 60,
-                                        1,
-                                        "smoothing",
-                                        0,
-                                        setupWindowWidget,
-                                        xpWidgetClass_ScrollBar);
-
-    XPSetWidgetProperty(smoothingScrollbar, xpProperty_ScrollBarType, xpScrollBarTypeSlider);
-    XPSetWidgetProperty(smoothingScrollbar, xpProperty_ScrollBarMin, 1);
-    XPSetWidgetProperty(smoothingScrollbar, xpProperty_ScrollBarMax, 100);
-    XPSetWidgetProperty(smoothingScrollbar, xpProperty_ScrollBarSliderPosition, getSmoothing());
-
+    /* Adding callback for window events */
     XPAddWidgetCallback(setupWindowWidget, SetupWindowHandler);
 }
+
 
 
 /**
