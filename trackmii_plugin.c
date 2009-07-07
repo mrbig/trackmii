@@ -29,6 +29,8 @@ int gFreeView = 0;
 // This is the current head pose
 TPose gPose;
 
+int gValid = 0;
+
 // Translation config
 basicTranslationCfg gTranslationCfg[2];
 
@@ -220,9 +222,29 @@ void MyDrawWindowCallback(
      * rectangle that is our window's shape. */
     XPLMDrawTranslucentDarkBox(left, top, right, bottom);
 
-    sprintf(buf, "TrackMii: pitch: %f yaw: %f\n", gPose.pitch, gPose.yaw);
-    XPLMDrawString(color, left + 5, top - 20,
+    sprintf(buf, "TrackMii:");
+    XPLMDrawString(color, left + 5, top - 15,
                    buf, NULL, xplmFont_Basic);
+
+    sprintf(buf, "    pitch: %f yaw: %f", gPose.pitch, gPose.yaw);
+    XPLMDrawString(color, left + 5, top - 30,
+                   buf, NULL, xplmFont_Basic);
+
+    sprintf(buf, "    leds: %d ", gValid);
+    if (!gWiimote) {
+        strcat(buf, "(tracking off)");
+    }
+    else if (gValid == 3) {
+        strcat(buf, "(ok)");
+    } else {
+        strcat(buf, "(weak)");
+    }
+
+    XPLMDrawString(color, left + 5, top - 45,
+                   buf, NULL, xplmFont_Basic);
+    //sprintf(buf, "TrackMii: panX: %f panY: %f panZ: %f\n", gPose.panX, gPose.panY, gPose.panZ);
+    //XPLMDrawString(color, left + 5, top - 40,
+    //               buf, NULL, xplmFont_Basic);
 }                                   
 
 /**
@@ -258,8 +280,8 @@ int MyDrawingCallback (
         SmoothPose(&gPose);
         XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
         XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
-
     }
+    gValid = valid;
 
     return 1;
 }
