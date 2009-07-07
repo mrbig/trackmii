@@ -51,7 +51,7 @@ void SetupTranslationCurve(int, basicTranslationCfg cfg);
 // Datarefs in use
 XPLMDataRef gPilotHeadYawDf = NULL;
 XPLMDataRef gPilotHeadPitchDf = NULL;
-
+XPLMDataRef gFrameRatePeriodDf = NULL;
 
 /*
  * XPluginStart
@@ -96,13 +96,15 @@ PLUGIN_API int XPluginStart(
 #ifndef WIIMOTE_DISABLED
     if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
     //    return 0;
+        fprintf(stderr, "Wiimote not found\n");
     } else {
         cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
         cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
+        fprintf(stderr, "Wiimote connected\n");
     }
 #endif
     
-    fprintf(stderr, "Wiimote connected\n");
+    
     
     /* Register our hot key for the new view. */
     gHotKey = XPLMRegisterHotKey(XPLM_VK_F8, xplm_DownFlag, 
@@ -116,6 +118,7 @@ PLUGIN_API int XPluginStart(
     /* Necessary datarefs */
     gPilotHeadYawDf = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
     gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
+    gFrameRatePeriodDf = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
 
     /* Gui initialization */
     InitGui();
@@ -259,6 +262,7 @@ int MyDrawingCallback (
     if (!gFreeView || !gWiimote) return 1;
 
     int i, valid;
+    float fps;
     struct cwiid_state state;
     point2D pnts[3];
 
@@ -277,7 +281,8 @@ int MyDrawingCallback (
 
     if (valid == 3 && !AlterPose(pnts, &gPose)) {
         PoseToDegrees(&gPose);
-        SmoothPose(&gPose);
+        fps = XPLMGetDataf(gFrameRatePeriodDf);
+        SmoothPose(&gPose, 1/fps);
         XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
         XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
     }

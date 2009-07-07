@@ -273,11 +273,11 @@ float ApplyTranslation(int dof, float value) {
 /**
  * Smooth position changes
  */
-void SmoothPose(TPose *pose) {
+void SmoothPose(TPose *pose, float fps) {
     float SmoothingSize;
     TPose delta;
 
-    SmoothingSize =  20 * gSmoothing * GLOBAL_SMOOTHING * 0.001;
+    SmoothingSize =  fps * gSmoothing * GLOBAL_SMOOTHING * 0.001;
 
     delta.yaw = abs(pose->yaw - oldpose.yaw);
     delta.roll = abs(pose->roll - oldpose.roll);
