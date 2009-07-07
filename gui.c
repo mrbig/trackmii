@@ -35,6 +35,8 @@ XPWidgetID pitchResponseScrollbar = NULL;
 XPWidgetID pitchAmplificationValueCaption = NULL;
 XPWidgetID pitchAmplificationScrollbar = NULL;
 
+XPWidgetID connectButton = NULL;
+
 /**
  * Initializing menu, and other gui stuff
  */
@@ -147,6 +149,12 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(pitchAmplificationValueCaption, buff);
+        }
+    }
+    else if (inMessage == xpMsg_PushButtonPressed)
+    {
+        if (inParam1 == (long)connectButton) {
+            ConnectWiimote();
         }
     }
     return 0;
@@ -263,6 +271,15 @@ void CreateSetupWindow()
             trcfg.amplification,
             0, 100);
 
+    /* Wiimote connect button */
+    connectButton = XPCreateWidget(x + 220, y-180, x2 - 220, y - 197,
+                                        1,
+                                        "Connect to Wiimote",
+                                        0,
+                                        setupWindowWidget,
+                                        xpWidgetClass_Button);
+    XPSetWidgetProperty(connectButton, xpProperty_ButtonType, xpPushButton);
+    XPSetWidgetProperty(connectButton, xpProperty_ButtonBehavior, xpButtonBehaviorPushButton);
     
     /* Adding callback for window events */
     XPAddWidgetCallback(setupWindowWidget, SetupWindowHandler);

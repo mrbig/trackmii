@@ -21,6 +21,7 @@ typedef struct basicTranslationCfg {
 basicTranslationCfg getTranslationCfg(int dof);
 void setTranslationCfg(int dof, basicTranslationCfg* cfg);
 
+void ConnectWiimote();
 
 #ifdef	__cplusplus
 }

@@ -87,23 +87,9 @@ PLUGIN_API int XPluginStart(
     /*
      * Wiimote initialization
      */
-    bdaddr_t bdaddr;
     point3Df dimensions3PtsCap[3];
-    
-    bdaddr = *BDADDR_ANY;
-    fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
 
-#ifndef WIIMOTE_DISABLED
-    if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
-    //    return 0;
-        fprintf(stderr, "Wiimote not found\n");
-    } else {
-        cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
-        cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
-        fprintf(stderr, "Wiimote connected\n");
-    }
-#endif
-    
+    ConnectWiimote();
     
     
     /* Register our hot key for the new view. */
@@ -198,6 +184,26 @@ PLUGIN_API void XPluginReceiveMessage(
 {
 }
 
+/**
+ * Connecting to the wiimote
+ */
+void ConnectWiimote() {
+    bdaddr_t bdaddr;
+
+    bdaddr = *BDADDR_ANY;
+#ifndef WIIMOTE_DISABLED
+
+    fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
+
+    if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
+        fprintf(stderr, "Wiimote not found\n");
+    } else {
+        cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
+        cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
+        fprintf(stderr, "Wiimote connected\n");
+    }
+#endif
+}
 
 /*
  * MyDrawingWindowCallback
