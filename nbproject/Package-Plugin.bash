@@ -56,8 +56,12 @@ mkdir -p ${TMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory ${TMPDIR}/trackmii/bin
-copyFileToTmpDir "${OUTPUT_PATH}" "${TMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+makeDirectory ${TMPDIR}/trackmii
+copyFileToTmpDir "${OUTPUT_PATH}" "${TMPDIR}/${PACKAGE_TOP_DIR}${OUTPUT_BASENAME}" 0755
+
+cd "${TOP}"
+makeDirectory ${TMPDIR}/trackmii
+copyFileToTmpDir "README" "${TMPDIR}/${PACKAGE_TOP_DIR}README" 0644
 
 
 # Generate tar file
