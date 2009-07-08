@@ -66,7 +66,7 @@ ${OBJECTDIR}/gui.o: gui.c
 ${OBJECTDIR}/trackmii_plugin.o: trackmii_plugin.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -Wall -s -I../SDK/CHeaders/XPLM -I../SDK/CHeaders/Widgets -DWIIMOTE_DISABLED=1 -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii_plugin.o trackmii_plugin.c
+	$(COMPILE.c) -g -Wall -s -I../SDK/CHeaders/XPLM -I../SDK/CHeaders/Widgets -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii_plugin.o trackmii_plugin.c
 
 # Subprojects
 .build-subprojects:
