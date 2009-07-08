@@ -1,0 +1,23 @@
+Trackmii is a head tracking plugin for X-Plane on linux. It uses the wiimote
+to capture image data. Lots of the code is basically a Linux/C port of the
+opensource Freetrack project. It supports the 3 point cap modell, as
+described at the Freetrack site.
+
+Trackmii is currently in early development stage. It supports two degrees of
+freedom (pitch, yaw), and a user interface to set up smoothing and
+translation curves.
+
+Software requirements:
+ - cwiid for communicating with the wiimote
+     http://abstrakraft.org/cwiid/
+     
+ - X-Plane plugin SDK 
+     http://www.xsquawkbox.net/xpsdk/mediawiki/Main_Page
+
+ - bluetooth support set up and working
+
+Hardware requirements:
+ - 3 points cap - refer to Freetrack Handbook how to build one
+     http://www.free-track.net/english/freetrack/manuel.php
+
+ - Wiimote
