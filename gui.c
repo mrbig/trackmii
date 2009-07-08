@@ -39,6 +39,7 @@ XPWidgetID pitchAmplificationScrollbar = NULL;
 XPWidgetID wiimoteConnected = NULL;
 XPWidgetID wiimoteDisconnected = NULL;
 XPWidgetID connectButton = NULL;
+XPWidgetID debugCheckbox = NULL;
 
 /**
  * Initializing menu, and other gui stuff
@@ -168,6 +169,11 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
             }
         }
     }
+    else if (inMessage == xpMsg_ButtonStateChanged) {
+        if (inParam1 == (long)debugCheckbox) {
+            ToggleDebugWindowVisible(inParam2);
+        }
+    }
     return 0;
 }
 
@@ -247,6 +253,16 @@ void CreateSetupWindow()
             getSmoothing(),
             1, 100);
 
+    /* Radio button to enable/disable debugging */
+    debugCheckbox = XPCreateWidget(x + 400, y-40, x + 415, y - 60,
+                                        1,
+                                        "",
+                                        0,
+                                        setupWindowWidget,
+                                        xpWidgetClass_Button);
+    XPSetWidgetProperty(debugCheckbox, xpProperty_ButtonType, xpRadioButton);
+    XPSetWidgetProperty(debugCheckbox, xpProperty_ButtonBehavior, xpButtonBehaviorCheckBox);
+    XPCreateWidget(x+415, y-40, x2-10, y-60, 1, "show debug window", 0, setupWindowWidget, xpWidgetClass_Caption);
 
     /* yaw deadzone scrollbar */
     XPCreateWidget(x+10, y - 70, x + 80, y-90, 1, "Yaw translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
@@ -335,7 +351,6 @@ void CreateSetupWindow()
     
     /* Adding callback for window events */
     XPAddWidgetCallback(setupWindowWidget, SetupWindowHandler);
-    //XPAddWidgetCallback(setupWindowWidget, XPUFixedLayout);
 }
 
 

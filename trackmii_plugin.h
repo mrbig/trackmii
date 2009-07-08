@@ -29,6 +29,8 @@ int getConnectionState();
 
 void SaveSettings();
 
+void ToggleDebugWindowVisible(int state);
+
 #ifdef	__cplusplus
 }
 #endif

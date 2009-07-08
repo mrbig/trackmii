@@ -87,7 +87,7 @@ PLUGIN_API int XPluginStart(
 
     gWindow = XPLMCreateWindow(
                     0, 700, 300, 650,            /* Area of the window. */
-                    1,                            /* Start visible. */
+                    0,                           /* Start invisible. */
                     MyDrawWindowCallback,        /* Callbacks */
                     NULL,
                     NULL,
@@ -406,6 +406,10 @@ void SaveSettings() {
 
 }
 
+/**
+ * Load current settings from binary properties file
+ * File has a version on the begin, if it does not match, fail silenty
+ */
 void LoadSettings() {
     char path[1024];
     int fd = 0;
@@ -441,4 +445,12 @@ void LoadSettings() {
     fprintf(stderr, "Settings loaded\n");
 
     close( fd );
+}
+
+/**
+ * Set debug window state, if param int 1, the window is visible
+ * else it's hidden
+ */
+void ToggleDebugWindowVisible(int state) {
+    XPLMSetWindowIsVisible(gWindow, state);
 }
