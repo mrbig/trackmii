@@ -53,6 +53,7 @@ XPLMDataRef gPilotHeadYawDf = NULL;
 XPLMDataRef gPilotHeadPitchDf = NULL;
 XPLMDataRef gFrameRatePeriodDf = NULL;
 
+
 /*
  * XPluginStart
  * 
@@ -272,7 +273,20 @@ int MyDrawingCallback (
     struct cwiid_state state;
     point2D pnts[3];
 
-    if (cwiid_get_state(gWiimote, &state)) return 1;
+    if (cwiid_request_status(gWiimote)) {
+        fprintf(stderr, "Requesting status failed, disconnecting\n");
+        cwiid_close(gWiimote);
+        gWiimote = NULL;
+        return 1;
+    }
+
+    if (cwiid_get_state(gWiimote, &state)) {
+        // Treat connection as disconnected on error
+        fprintf(stderr, "Error reading wiimote state\n");
+        cwiid_close(gWiimote);
+        gWiimote = NULL;
+        return 1;
+    }
 
     valid = 0;
     for (i=0; i<CWIID_IR_SRC_COUNT; i++) {
@@ -345,3 +359,16 @@ void setTranslationCfg(int dof, basicTranslationCfg *cfg) {
 
     SetupTranslationCurve(dof, gTranslationCfg[dof]);
 }
+
+/**
+ * Returns 1 if connection is ok, 0 if not connected
+ */
+int getConnectionState() {
+    if (gWiimote && cwiid_request_status(gWiimote)) {
+        fprintf(stderr, "Requesting status failed, disconnecting\n");
+        cwiid_close(gWiimote);
+        gWiimote = NULL;
+    }
+    return gWiimote ? 1 : 0;
+}
+

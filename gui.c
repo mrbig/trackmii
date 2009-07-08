@@ -5,6 +5,7 @@
 #include "XPLMMenus.h"
 #include "XPWidgets.h"
 #include "XPStandardWidgets.h"
+#include "XPWidgetUtils.h"
 #include "trackmii_plugin.h"
 #include "pose.h"
 
@@ -35,6 +36,8 @@ XPWidgetID pitchResponseScrollbar = NULL;
 XPWidgetID pitchAmplificationValueCaption = NULL;
 XPWidgetID pitchAmplificationScrollbar = NULL;
 
+XPWidgetID wiimoteConnected = NULL;
+XPWidgetID wiimoteDisconnected = NULL;
 XPWidgetID connectButton = NULL;
 
 /**
@@ -155,10 +158,29 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
     {
         if (inParam1 == (long)connectButton) {
             ConnectWiimote();
+            if (getConnectionState()) {
+                XPHideWidget(wiimoteDisconnected);
+                XPShowWidget(wiimoteConnected);
+            } else {
+                XPShowWidget(wiimoteDisconnected);
+                XPHideWidget(wiimoteConnected);
+            }
         }
     }
     return 0;
 }
+
+/**
+ * Generic handler for subwindows, dispatches everything upwards
+ */
+int SubwindowHandler(XPWidgetMessage inMessage,
+                     XPWidgetID      inWidget,
+                     long            inParam1,
+                     long            inParam2)
+{
+    return 0;
+}
+
 
 /**
  * Creating a scrollbar handle, as we like it
@@ -205,7 +227,7 @@ void CreateSetupWindow()
     x = 100;
     y = 650;
     w = 600;
-    h = 250;
+    h = 270;
     x2 = x + w;
     y2 = y - h;
 
@@ -271,18 +293,48 @@ void CreateSetupWindow()
             trcfg.amplification,
             0, 100);
 
-    /* Wiimote connect button */
-    connectButton = XPCreateWidget(x + 220, y-180, x2 - 220, y - 197,
+    /* Wiimote connected subwindows */
+    wiimoteConnected = XPCreateWidget(x+40, y-185, x2-40, y2+25, 0,
+                                      "Wiimote is connected",
+                                      0, setupWindowWidget, xpWidgetClass_SubWindow);
+
+    XPSetWidgetProperty(wiimoteConnected, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
+    XPAddWidgetCallback(wiimoteConnected, XPUFixedLayout);
+    XPCreateWidget(x+230, y - 210, x2 - 230, y-230, 1,
+                   "Wiimote is connected",
+                   0, wiimoteConnected, xpWidgetClass_Caption);
+
+
+    /* Wiimote disconnected subwindow, with connect button */
+    wiimoteDisconnected = XPCreateWidget(x+40, y-170, x2-40, y2+10, 0,
+                                      "Wiimote is currently not connected",
+                                      0, setupWindowWidget, xpWidgetClass_SubWindow);
+
+    XPSetWidgetProperty(wiimoteDisconnected, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
+    XPAddWidgetCallback(wiimoteDisconnected, XPUFixedLayout);
+
+    XPCreateWidget(x+215, y - 180, x2 - 230, y-193, 1,
+                   "Wiimote is currently not connected",
+                   0, wiimoteDisconnected, xpWidgetClass_Caption);
+    XPCreateWidget(x+90, y - 200, x2 - 10, y-213, 1,
+                   "To connect the wiimote you should put it first in discoverable mode (press 1+2),",
+                   0, wiimoteDisconnected, xpWidgetClass_Caption);
+    XPCreateWidget(x+228, y - 213, x2 - 235, y-226, 1,
+                   "then click the button below.",
+                   0, wiimoteDisconnected, xpWidgetClass_Caption);
+    connectButton = XPCreateWidget(x + 220, y-235, x2 - 220, y - 252,
                                         1,
                                         "Connect to Wiimote",
                                         0,
-                                        setupWindowWidget,
+                                        wiimoteDisconnected,
                                         xpWidgetClass_Button);
     XPSetWidgetProperty(connectButton, xpProperty_ButtonType, xpPushButton);
     XPSetWidgetProperty(connectButton, xpProperty_ButtonBehavior, xpButtonBehaviorPushButton);
+
     
     /* Adding callback for window events */
     XPAddWidgetCallback(setupWindowWidget, SetupWindowHandler);
+    //XPAddWidgetCallback(setupWindowWidget, XPUFixedLayout);
 }
 
 
@@ -297,6 +349,13 @@ void MenuHandler(void *mRef, void * iRef)
             CreateSetupWindow();
         } else {
             XPShowWidget(setupWindowWidget);
+        }
+        if (getConnectionState()) {
+            XPHideWidget(wiimoteDisconnected);
+            XPShowWidget(wiimoteConnected);
+        } else {
+            XPShowWidget(wiimoteDisconnected);
+            XPHideWidget(wiimoteConnected);
         }
     }
 }

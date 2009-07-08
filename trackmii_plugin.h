@@ -23,6 +23,8 @@ void setTranslationCfg(int dof, basicTranslationCfg* cfg);
 
 void ConnectWiimote();
 
+int getConnectionState();
+
 #ifdef	__cplusplus
 }
 #endif
