@@ -13,6 +13,8 @@ extern "C" {
 #endif
 
 #define TRACKMII_VERSION 1
+// Number of cycles between checking wiimote state
+#define STATE_CHECK_INTERVAL 150;
 
 typedef struct basicTranslationCfg {
     int deadzone;

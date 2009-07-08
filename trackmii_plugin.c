@@ -35,6 +35,8 @@ int gValid = 0;
 
 int gVersion = TRACKMII_VERSION;
 
+int gStateCheckIn = STATE_CHECK_INTERVAL;
+
 // Translation config
 basicTranslationCfg gTranslationCfg[2];
 
@@ -287,11 +289,15 @@ int MyDrawingCallback (
     struct cwiid_state state;
     point2D pnts[3];
 
-    if (cwiid_request_status(gWiimote)) {
-        fprintf(stderr, "Requesting status failed, disconnecting\n");
-        cwiid_close(gWiimote);
-        gWiimote = NULL;
-        return 1;
+    if (!gStateCheckIn--) {
+        gStateCheckIn = STATE_CHECK_INTERVAL;
+
+        if (cwiid_request_status(gWiimote)) {
+            fprintf(stderr, "Requesting status failed, disconnecting\n");
+            cwiid_close(gWiimote);
+            gWiimote = NULL;
+            return 1;
+        }
     }
 
     if (cwiid_get_state(gWiimote, &state)) {
