@@ -12,6 +12,8 @@
 extern "C" {
 #endif
 
+#define TRACKMII_VERSION 1
+
 typedef struct basicTranslationCfg {
     int deadzone;
     int response;
@@ -24,6 +26,8 @@ void setTranslationCfg(int dof, basicTranslationCfg* cfg);
 void ConnectWiimote();
 
 int getConnectionState();
+
+void SaveSettings();
 
 #ifdef	__cplusplus
 }

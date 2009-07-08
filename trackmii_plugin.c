@@ -2,10 +2,15 @@
 #include <string.h>
 #include <cwiid.h>
 #include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "XPLMDisplay.h"
 #include "XPLMGraphics.h"
 #include "XPLMCamera.h"
 #include "XPLMDataAccess.h"
+#include "XPLMUtilities.h"
 #include "trackmii_plugin.h"
 #include "pose.h"
 #include "gui.h"
@@ -31,6 +36,8 @@ TPose gPose;
 
 int gValid = 0;
 
+int gVersion = TRACKMII_VERSION;
+
 // Translation config
 basicTranslationCfg gTranslationCfg[2];
 
@@ -47,6 +54,8 @@ int MyDrawingCallback (
 
 // Forward references
 void SetupTranslationCurve(int, basicTranslationCfg cfg);
+
+void LoadSettings();
 
 // Datarefs in use
 XPLMDataRef gPilotHeadYawDf = NULL;
@@ -127,6 +136,8 @@ PLUGIN_API int XPluginStart(
     gTranslationCfg[DOF_PITCH].deadzone = 15;
     gTranslationCfg[DOF_PITCH].response = 5;
     gTranslationCfg[DOF_PITCH].amplification = 25;
+
+    LoadSettings();
 
     SetupTranslationCurve(DOF_YAW, gTranslationCfg[DOF_YAW]);
     SetupTranslationCurve(DOF_PITCH, gTranslationCfg[DOF_PITCH]);
@@ -330,7 +341,7 @@ void SetupTranslationCurve(int dof, basicTranslationCfg cfg) {
 
     trcfg.P2.x = 99;  trcfg.P2.y = 220+4*cfg.amplification;
 
-    //*
+    /*
     fprintf(stderr, "New translation config for dof %d is:\n", dof);
     fprintf(stderr, "P1.x=%d P1.y=%d\n", trcfg.P1.x, trcfg.P1.y);
     fprintf(stderr, "C1.x=%d C1.y=%d\n", trcfg.C1.x, trcfg.C1.y);
@@ -372,3 +383,62 @@ int getConnectionState() {
     return gWiimote ? 1 : 0;
 }
 
+/**
+ * Saving current settings into preferences file
+ */
+void SaveSettings() {
+    char path[1024];
+    int fd = 0;
+    int smoothing;
+
+    XPLMGetSystemPath(path);
+
+    strcat(path, "Output/preferences/trackmii.prf");
+
+    fd = open( path, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH );
+
+    smoothing = getSmoothing();
+    write( fd, &gVersion, sizeof(int));
+    write( fd, &smoothing, sizeof(int));
+    write( fd, gTranslationCfg, sizeof( gTranslationCfg ));
+    
+    close( fd );
+
+}
+
+void LoadSettings() {
+    char path[1024];
+    int fd = 0;
+    int smoothing;
+    int ver;
+
+    XPLMGetSystemPath(path);
+
+    strcat(path, "Output/preferences/trackmii.prf");
+
+    fd = open( path, O_RDONLY);
+
+    if (!read(fd, &ver, sizeof(int))) {
+        close(fd);
+        return;
+    }
+    if (ver != gVersion) {
+        fprintf(stderr, "Found invalid version of preferences file, ignoring.\n");
+        close(fd);
+        return;
+    }
+    if (!read(fd, &smoothing, sizeof(int))) {
+        close(fd);
+        return;
+    }
+    if (!read(fd, gTranslationCfg, sizeof( gTranslationCfg ))) {
+        close(fd);
+        return;
+    }
+
+    setSmoothing(smoothing);
+
+    fprintf(stderr, "Settings loaded\n");
+
+    close( fd );
+}

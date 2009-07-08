@@ -76,6 +76,7 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
     if (inMessage == xpMessage_CloseButtonPushed)
     {
         XPHideWidget(setupWindowWidget);
+        SaveSettings();
     }
     else if (inMessage == xpMsg_ScrollBarSliderPositionChanged)
     {
