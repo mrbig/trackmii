@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#define XPLM200 = 1;
 #include "XPLMDisplay.h"
 #include "XPLMGraphics.h"
 #include "XPLMCamera.h"
@@ -16,13 +18,8 @@
 #include "gui.h"
 
 /*
- * Global Variables.  We will store our single window globally.  We also record
- * whether the mouse is down from our mouse handler.  The drawing handler looks
- * at this information and draws the appropriate display.
- * 
+ * Global Variables.  We will store our single window globally.
  */
-
-XPLMHotKeyID	gHotKey = NULL;
 
 XPLMWindowID    gWindow = NULL;
 
@@ -41,11 +38,15 @@ int gVersion = TRACKMII_VERSION;
 // Translation config
 basicTranslationCfg gTranslationCfg[2];
 
+XPLMCommandRef cmdOnOff = NULL;
+
 // Different callbacks
 void MyDrawWindowCallback( XPLMWindowID inWindowID,    
                            void * inRefcon);
 
-void MyHotKeyCallback(void * inRefcon);    
+int MyOnOffHandler(XPLMCommandRef   inCommand,
+                   XPLMCommandPhase inPhase,
+                   void *           inRefcon);
 
 int MyDrawingCallback (
                                    XPLMDrawingPhase     inPhase,    
@@ -103,10 +104,11 @@ PLUGIN_API int XPluginStart(
     
     
     /* Register our hot key for the new view. */
-    gHotKey = XPLMRegisterHotKey(XPLM_VK_F8, xplm_DownFlag, 
-                                 "Head tracking on/off",
-                                 MyHotKeyCallback,
-                                 NULL);
+    cmdOnOff = XPLMCreateCommand("trackmii/operation/toggle_tracking", "Toggle head tracking");
+    XPLMRegisterCommandHandler(cmdOnOff,
+                               MyOnOffHandler,
+                               1,                    // Receive input before plugin windows
+                               (void *) 0);          // inRefcon.
     
     /* Register drawing callback */
     XPLMRegisterDrawCallback(MyDrawingCallback, xplm_Phase_FirstScene, 1, NULL);
@@ -156,6 +158,7 @@ PLUGIN_API int XPluginStart(
 PLUGIN_API void    XPluginStop(void)
 {
     XPLMDestroyWindow(gWindow);
+    XPLMUnregisterCommandHandler(cmdOnOff, MyOnOffHandler, 0, 0);
     DestroyGui();
     if (gWiimote) cwiid_close(gWiimote);
     fprintf(stderr, "Wiimote closed\n");
@@ -323,11 +326,15 @@ int MyDrawingCallback (
 }
 
 /**
- * Hotkey for turnin the headtracking on/off
+ * Command for turning the headtracking on/off
  */
-void	MyHotKeyCallback(void *               inRefcon)
+int MyOnOffHandler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
-    gFreeView = 1-gFreeView;
+    if ( inPhase == 2 ) {
+        gFreeView = 1-gFreeView;
+    }
+    
+    return 0;
 }
 
 void SetupTranslationCurve(int dof, basicTranslationCfg cfg) {
