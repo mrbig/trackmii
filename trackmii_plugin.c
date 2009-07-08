@@ -322,7 +322,10 @@ int MyDrawingCallback (
     if (valid == 3 && !AlterPose(pnts, &gPose)) {
         PoseToDegrees(&gPose);
         fps = XPLMGetDataf(gFrameRatePeriodDf);
-        SmoothPose(&gPose, 1/fps);
+        // During pause fps is zero
+        fps = fps ? 1/fps : 20;
+        SmoothPose(&gPose, fps);
+        
         XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
         XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
     }
