@@ -1,23 +1,106 @@
-Trackmii is a head tracking plugin for X-Plane on linux. It uses the wiimote
+TrackMii is a head tracking plugin for X-Plane on linux. It uses the wiimote
 to capture image data. Lots of the code is basically a Linux/C port of the
-opensource Freetrack project. It supports the 3 point cap modell, as
+opensource Freetrack project. It supports the 3 point cap model, as
 described at the Freetrack site.
 
-Trackmii is currently in early development stage. It supports two degrees of
+TrackMii is currently in early development stage. It supports two degrees of
 freedom (pitch, yaw), and a user interface to set up smoothing and
 translation curves.
 
-Software requirements:
- - cwiid for communicating with the wiimote
+
+  Software requirements
+==============================
+
+ * cwiid for communicating with the wiimote
      http://abstrakraft.org/cwiid/
      
- - X-Plane plugin SDK 
+ * X-Plane plugin SDK 
      http://www.xsquawkbox.net/xpsdk/mediawiki/Main_Page
 
- - bluetooth support set up and working
+ * bluetooth support set up and working
 
-Hardware requirements:
+
+   Hardware requirements:
+==============================
+
  - 3 points cap - refer to Freetrack Handbook how to build one
      http://www.free-track.net/english/freetrack/manuel.php
 
  - Wiimote
+
+
+  Compile and install
+==============================
+
+TrackMii currently does not have autoconfigure. To compile the X-Plane plugin
+at the project directory type:
+
+   make CONF=Plugin
+
+and hopefully you'll get your plugin at dist/Plugin/GNU-Linux-x86/ named
+as trackmii_plugin.xpl
+
+Copy this file to the Resources/plugins/ directory of your X-Plane
+installation.
+
+TrackMii also has a console test program, if you intend to use the code in
+some other applications, you could check the trackmii.c.
+
+
+  Usage
+==============================
+
+      Connecting
+
+TrackMii plugin tries to connect to the Wiimote immediately as the simulator
+starts up, so it is a good idea to put the Wiimote into discoverable mode
+right before you start X-Plane. The easiest way is to push 1+2 at the same
+time. You'll see the blue leds blinking. When the plugin is connected the
+leds one and four will be lit up, this means you're good to go.
+
+      Setup
+
+In the simulator you can access the setup under the Plugins->TrackMii menu.
+The setup window you are able to set the smoothing globally, and the
+responsivity for each axes.
+
+Smoothing is the value that controls how fast the simulator will react on
+head movement. The larger the value, the slower the little movements will be
+tracked.
+
+For both axes (yaw, pitch) you can set the following values:
+
+ * deadzone: the size of the area where we treat the head as centered
+
+ * response: curvature of the translation function. It's like the function 
+             that you can use for joystick responsivity. Left most value
+             means linear response, rightmost means most nonlinear.
+
+ * amplification: how much we'll amplify your head movement. This makes it
+             possible to see the monitor even when you want to look back in
+             the simulator.
+
+If you were not able to connect the Wiimote on start up, you can do this also
+in this setup window.
+
+      Using in game
+
+To turn head tracking on and off you'll need to assign it to a button, or
+key. Go to Settings->Joystick & Equipment menu. Use the "Buttons Adv" panel
+to assign it to a joystick button, or "Keys" pane to assign it to a keyboard
+shortcut.
+
+To select the TrackMii command, you should click the checkbox on the top
+middle part of the window (left of the text input field). In the X System
+folder select trackmii/operation/toggle_tracking.
+
+When all done, you can turn the head tracking on and off with your desired
+command. Turning it on will take you to the virtual cockpit immediately.
+
+If you experience problems, try to turn on the debugging window in the
+plugin setup menu. Here you can check the state of the connection, and how
+many of the infrared leds are seen by the Wiimote. If it's less the three,
+then head tracking won't work.
+
+Good luck, and if you have questions contact me at
+nagy.attila.gabor@gmail.com
