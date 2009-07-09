@@ -137,6 +137,9 @@
       </compileType>
       <packaging>
         <packType>Tar</packType>
+        <output>dist/Plugin/${PLATFORM}/package/trackmii.tar.gz</output>
+        <additionalOptions>-vz</additionalOptions>
+        <packTopDir>trackmii</packTopDir>
         <packFileList>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}${OUTPUT_BASENAME}"
@@ -147,6 +150,18 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}README"
                             from="README"
+                            perm="644"
+                            owner="root"
+                            group="sys"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}AUTHORS"
+                            from="AUTHORS"
+                            perm="644"
+                            owner="root"
+                            group="sys"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}COPYING"
+                            from="COPYING"
                             perm="644"
                             owner="root"
                             group="sys"/>

@@ -63,12 +63,20 @@ cd "${TOP}"
 makeDirectory ${TMPDIR}/trackmii
 copyFileToTmpDir "README" "${TMPDIR}/${PACKAGE_TOP_DIR}README" 0644
 
+cd "${TOP}"
+makeDirectory ${TMPDIR}/trackmii
+copyFileToTmpDir "AUTHORS" "${TMPDIR}/${PACKAGE_TOP_DIR}AUTHORS" 0644
+
+cd "${TOP}"
+makeDirectory ${TMPDIR}/trackmii
+copyFileToTmpDir "COPYING" "${TMPDIR}/${PACKAGE_TOP_DIR}COPYING" 0644
+
 
 # Generate tar file
 cd "${TOP}"
-rm -f dist/Plugin/${PLATFORM}/package/trackmii.tar
+rm -f dist/Plugin/${PLATFORM}/package/trackmii.tar.gz
 cd ${TMPDIR}
-tar -vcf ../../../../dist/Plugin/${PLATFORM}/package/trackmii.tar *
+tar -vzcf ../../../../dist/Plugin/${PLATFORM}/package/trackmii.tar.gz *
 checkReturnCode
 
 # Cleanup
