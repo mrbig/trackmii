@@ -23,6 +23,7 @@
 #include <cwiid.h>
 #include <math.h>
 #include "pose.h"
+#include <GL/gl.h>
 
 #define sqr(z)	((z) * (z))
 
@@ -268,6 +269,66 @@ int AlterPose(point2D img[3], TPose *pose) {
     pose->panY = inv_s * img[0].y;
     pose->panZ = inv_s * FZScalar;
 
+    // Normal vectors
+    point3Df axis_norm[3];
+    axis_norm[0].x = r1e_norm[0];
+    axis_norm[0].y = r1e_norm[1];
+    axis_norm[0].z = r1e_norm[2];
+
+    axis_norm[1].x = r2e_norm[0];
+    axis_norm[1].y = r2e_norm[1];
+    axis_norm[1].z = r2e_norm[2];
+
+    axis_norm[2].x = r3e_norm[0];
+    axis_norm[2].y = r3e_norm[1];
+    axis_norm[2].z = r3e_norm[2];
+
+
+    // align estimated model normalised vectors with axes by rotating relative to other normalised vectors
+    float matTrans[16];
+    matTrans[0] = axis_norm[2].x;        matTrans[4] = axis_norm[0].x;        matTrans[8]  = axis_norm[1].x;
+    matTrans[1] = axis_norm[2].y;        matTrans[5] = axis_norm[0].y;        matTrans[9]  = axis_norm[1].y;
+    matTrans[2] = axis_norm[2].z;        matTrans[6] = axis_norm[0].z;        matTrans[10] = axis_norm[1].z;
+    matTrans[3] = 0;                     matTrans[7] = 0;                     matTrans[11] = 0;
+
+    matTrans[12] = matTrans[13] = matTrans[14] = 0;
+    matTrans[15] = 1;
+
+    int oldMode;
+    glGetIntegerv(GL_MATRIX_MODE, &oldMode);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    glLoadMatrixf(matTrans);
+    glRotatef(-1*RadToDeg(yawAlignModel), 0, 1, 0);
+    glRotatef(-1*RadToDeg(pitchAlignModel), 1, 0, 0);
+    glGetFloatv(GL_MODELVIEW_MATRIX, matTrans);
+
+    glPopMatrix();
+    glMatrixMode(oldMode);
+
+    fprintf(stderr, "A: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
+    fprintf(stderr, "|%f %f %f %f|\n", matTrans[0], matTrans[4], matTrans[8], matTrans[12]);
+    fprintf(stderr, "|%f %f %f %f|\n", matTrans[1], matTrans[5], matTrans[9], matTrans[13]);
+    fprintf(stderr, "|%f %f %f %f|\n", matTrans[2], matTrans[6], matTrans[10], matTrans[14]);
+    fprintf(stderr, "|%f %f %f %f|\n", matTrans[3], matTrans[7], matTrans[11], matTrans[15]);
+
+    pose->panX = pose->panX - (   0 * matTrans[0] +
+                                160 * -matTrans[1] +
+                                -70 * -matTrans[2]);
+
+    pose->panY = pose->panY - (   0 * matTrans[4] +
+                                160 * -matTrans[5] +
+                                -70 * -matTrans[6]);
+
+    pose->panZ = pose->panZ - (   0 * matTrans[8] +
+                                160 * -matTrans[9] +
+                                -70 * -matTrans[10]);
+
+    pose->panX = pose->panX * M_PI/500;
+    pose->panY = pose->panY * M_PI/500;
+    pose->panZ = pose->panZ * M_PI/500;
+    fprintf(stderr, "B: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
     return 0;
 }
 
