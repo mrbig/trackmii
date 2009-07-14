@@ -26,7 +26,8 @@ extern "C" {
 
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define min(a,b) ((a) < (b) ? (a) : (b))
-
+#define DegToRad(a) (a/180*M_PI)
+#define RadToDeg(a) (a*180/M_PI)
 
 typedef struct point2D {
     uint16_t x;
