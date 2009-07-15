@@ -60,6 +60,7 @@ int gStateCheckIn = STATE_CHECK_INTERVAL;
 basicTranslationCfg gTranslationCfg[2];
 
 XPLMCommandRef cmdOnOff = NULL;
+XPLMCommandRef cmdCenter = NULL;
 
 // Different callbacks
 void MyDrawWindowCallback( XPLMWindowID inWindowID,    
@@ -68,6 +69,10 @@ void MyDrawWindowCallback( XPLMWindowID inWindowID,
 int MyOnOffHandler(XPLMCommandRef   inCommand,
                    XPLMCommandPhase inPhase,
                    void *           inRefcon);
+
+int MyCenteringHandler(XPLMCommandRef   inCommand,
+                       XPLMCommandPhase inPhase,
+                       void *           inRefcon);
 
 int MyDrawingCallback (
                                    XPLMDrawingPhase     inPhase,    
@@ -82,8 +87,16 @@ void LoadSettings();
 // Datarefs in use
 XPLMDataRef gPilotHeadYawDf = NULL;
 XPLMDataRef gPilotHeadPitchDf = NULL;
+XPLMDataRef gPilotHeadX = NULL;
+XPLMDataRef gPilotHeadY = NULL;
+XPLMDataRef gPilotHeadZ = NULL;
 XPLMDataRef gFrameRatePeriodDf = NULL;
 
+XPLMDataRef gViewType = NULL;
+
+point3Df gDefaultPilotHead;
+
+#define VIEW_FORWARDS 1000
 
 /*
  * XPluginStart
@@ -108,7 +121,7 @@ PLUGIN_API int XPluginStart(
      * right, bottom screen coordinates.  We pass in three callbacks. */
 
     gWindow = XPLMCreateWindow(
-                    0, 700, 300, 650,            /* Area of the window. */
+                    0, 700, 350, 625,            /* Area of the window. */
                     0,                           /* Start invisible. */
                     MyDrawWindowCallback,        /* Callbacks */
                     NULL,
@@ -130,6 +143,13 @@ PLUGIN_API int XPluginStart(
                                MyOnOffHandler,
                                1,                    // Receive input before plugin windows
                                (void *) 0);          // inRefcon.
+
+    /* And hotkey for centering */
+    cmdCenter = XPLMCreateCommand("trackmii/operation/centering", "Setting current position as center");
+    XPLMRegisterCommandHandler(cmdCenter,
+                               MyCenteringHandler,
+                               1,                    // Receive input before plugin windows
+                               (void *) 0);          // inRefcon.
     
     /* Register drawing callback */
     XPLMRegisterDrawCallback(MyDrawingCallback, xplm_Phase_FirstScene, 1, NULL);
@@ -137,7 +157,12 @@ PLUGIN_API int XPluginStart(
     /* Necessary datarefs */
     gPilotHeadYawDf = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
     gPilotHeadPitchDf = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
+    gPilotHeadX = XPLMFindDataRef("sim/graphics/view/pilots_head_x");
+    gPilotHeadY = XPLMFindDataRef("sim/graphics/view/pilots_head_y");
+    gPilotHeadZ = XPLMFindDataRef("sim/graphics/view/pilots_head_z");
     gFrameRatePeriodDf = XPLMFindDataRef("sim/operation/misc/frame_rate_period");
+
+    gViewType = XPLMFindDataRef("sim/graphics/view/view_type");
 
     /* Gui initialization */
     InitGui();
@@ -180,6 +205,7 @@ PLUGIN_API void    XPluginStop(void)
 {
     XPLMDestroyWindow(gWindow);
     XPLMUnregisterCommandHandler(cmdOnOff, MyOnOffHandler, 0, 0);
+    XPLMUnregisterCommandHandler(cmdCenter, MyCenteringHandler, 0, 0);
     DestroyGui();
     if (gWiimote) cwiid_close(gWiimote);
     fprintf(stderr, "Wiimote closed\n");
@@ -287,9 +313,9 @@ void MyDrawWindowCallback(
 
     XPLMDrawString(color, left + 5, top - 45,
                    buf, NULL, xplmFont_Basic);
-    //sprintf(buf, "TrackMii: panX: %f panY: %f panZ: %f\n", gPose.panX, gPose.panY, gPose.panZ);
-    //XPLMDrawString(color, left + 5, top - 40,
-    //               buf, NULL, xplmFont_Basic);
+    sprintf(buf, "TrackMii: panX: %f panY: %f panZ: %f\n", gPose.panX, gPose.panY, gPose.panZ);
+    XPLMDrawString(color, left + 5, top - 60,
+                   buf, NULL, xplmFont_Basic);
 }                                   
 
 /**
@@ -347,6 +373,10 @@ int MyDrawingCallback (
         
         XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
         XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
+
+        XPLMSetDataf(gPilotHeadX, gDefaultPilotHead.x-gPose.panX);
+        XPLMSetDataf(gPilotHeadY, gDefaultPilotHead.y+gPose.panY);
+        XPLMSetDataf(gPilotHeadZ, gDefaultPilotHead.z+gPose.panZ);
     }
     gValid = valid;
 
@@ -359,9 +389,27 @@ int MyDrawingCallback (
 int MyOnOffHandler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
     if ( inPhase == 2 ) {
+        if (XPLMGetDatai(gViewType) == VIEW_FORWARDS) {
+            // We save current head position for reference
+            gDefaultPilotHead.x = XPLMGetDataf(gPilotHeadX);
+            gDefaultPilotHead.y = XPLMGetDataf(gPilotHeadY);
+            gDefaultPilotHead.z = XPLMGetDataf(gPilotHeadZ);
+        }
         gFreeView = 1-gFreeView;
     }
     
+    return 0;
+}
+
+/**
+ * Command for turning the headtracking on/off
+ */
+int MyCenteringHandler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
+{
+    if ( inPhase == 2 ) {
+        SetCenter(&gPose);
+    }
+
     return 0;
 }
 

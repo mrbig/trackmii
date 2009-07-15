@@ -36,6 +36,7 @@ float yawAlignModel, pitchAlignModel;
 float FZScalar = 1320;
 
 TPose oldpose;
+TPose center;
 
 int gSmoothing = 15;
 
@@ -91,6 +92,14 @@ void Initialize3PCapModel(point3Df dimensions3PtsCap[3]) {
 
     yawAlignModel = atan( dimensions3PtsCap[0].x / dimensions3PtsCap[0].z );
     pitchAlignModel = atan( dimensions3PtsCap[0].y / dimensions3PtsCap[0].z );
+
+    // Reset centering values
+    center.pitch = 0;
+    center.roll = 0;
+    center.yaw = 0;
+    center.panX = 0;
+    center.panY = 0;
+    center.panZ = 0;
 }
 
 void InitializeCurve(int dof, translationCfg cfg) {
@@ -384,6 +393,23 @@ void SmoothPose(TPose *pose, float fps) {
     // Translation
     pose->yaw = ApplyTranslation(DOF_YAW, pose->yaw);
     pose->pitch = ApplyTranslation(DOF_PITCH, pose->pitch);
+
+    // Apply centering;
+    pose->pitch -= center.pitch;
+    pose->roll  -= center.roll;
+    pose->yaw   -= center.yaw;
+    pose->panX  -= center.panX;
+    pose->panY  -= center.panY;
+    pose->panZ  -= center.panZ;
+}
+
+void SetCenter(TPose *pose) {
+    center.pitch = pose->pitch + center.pitch;
+    center.roll  = pose->roll + center.roll;
+    center.yaw   = pose->yaw + center.yaw;
+    center.panX  = pose->panX + center.panX;
+    center.panY  = pose->panY + center.panY;
+    center.panZ  = pose->panZ + center.panZ;
 }
 
 int getSmoothing()
