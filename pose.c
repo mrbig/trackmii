@@ -33,8 +33,6 @@ float r1m_norm[3], r2m_norm[3], r3m_norm[3];
 
 float yawAlignModel, pitchAlignModel;
 
-float dist1, dist2;
-
 float FZScalar = 1320;
 
 TPose oldpose;
@@ -228,9 +226,6 @@ int AlterPose(point2D img[3], TPose *pose) {
     est_obj02[2] = inv_s * h2;
 
     //
-
-    dist1 = est_obj01[2];
-    dist2 = est_obj02[2];
 
     //**********image triad*********
     for ( i=0; i<3; i++ ) {
