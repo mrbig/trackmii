@@ -281,10 +281,11 @@ int AlterPose(point2D img[3], TPose *pose) {
 
     // align estimated model normalised vectors with axes by rotating relative to other normalised vectors
     float matTrans[16];
-    matTrans[0] = axis_norm[2].x;        matTrans[4] = axis_norm[0].x;        matTrans[8]  = axis_norm[1].x;
-    matTrans[1] = axis_norm[2].y;        matTrans[5] = axis_norm[0].y;        matTrans[9]  = axis_norm[1].y;
-    matTrans[2] = axis_norm[2].z;        matTrans[6] = axis_norm[0].z;        matTrans[10] = axis_norm[1].z;
-    matTrans[3] = 0;                     matTrans[7] = 0;                     matTrans[11] = 0;
+    //float matYaw[16], matPitch[16];
+    matTrans[0] = axis_norm[1].x;        matTrans[4] = -axis_norm[2].x;        matTrans[8]  = -axis_norm[0].x;
+    matTrans[1] = axis_norm[1].y;        matTrans[5] = -axis_norm[2].y;        matTrans[9]  = -axis_norm[0].y;
+    matTrans[2] = axis_norm[1].z;        matTrans[6] = -axis_norm[2].z;        matTrans[10] = -axis_norm[0].z;
+    matTrans[3] = 0;                     matTrans[7] = 0;                      matTrans[11] = 0;
 
     matTrans[12] = matTrans[13] = matTrans[14] = 0;
     matTrans[15] = 1;
@@ -302,28 +303,38 @@ int AlterPose(point2D img[3], TPose *pose) {
     glPopMatrix();
     glMatrixMode(oldMode);
 
-    fprintf(stderr, "A: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
-    fprintf(stderr, "|%f %f %f %f|\n", matTrans[0], matTrans[4], matTrans[8], matTrans[12]);
-    fprintf(stderr, "|%f %f %f %f|\n", matTrans[1], matTrans[5], matTrans[9], matTrans[13]);
-    fprintf(stderr, "|%f %f %f %f|\n", matTrans[2], matTrans[6], matTrans[10], matTrans[14]);
-    fprintf(stderr, "|%f %f %f %f|\n", matTrans[3], matTrans[7], matTrans[11], matTrans[15]);
+    //fprintf(stderr, "A: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
+    /*
+    fprintf(stderr, "|%03f %03f %03f|\n", matTrans[0], matTrans[4], matTrans[8]);
+    fprintf(stderr, "|%03f %03f %03f|\n", matTrans[1], matTrans[5], matTrans[9]);
+    fprintf(stderr, "|%03f %03f %03f|\n", matTrans[2], matTrans[6], matTrans[10]);
+    fprintf(stderr, "x: %02f, y: %02f, z: %02f\n", matTrans[0]-matTrans[4]-matTrans[8],
+            matTrans[1]-matTrans[5]-matTrans[9],
+            matTrans[2]+matTrans[6]+matTrans[10]);
+    //*/
 
-    pose->panX = pose->panX - (   0 * matTrans[0] +
-                                160 * -matTrans[1] +
-                                -70 * -matTrans[2]);
+    // normalised vectors representing y and z facing opposite to actual y and z axes
+    // TODO: these need some defines or gui
+    int rotOffsetX = 0;
+    int rotOffsetY = 20;
+    int rotOffsetZ = -20;
+    pose->panX = pose->panX - (  rotOffsetX * matTrans[0] +
+                                 rotOffsetY * matTrans[4] +
+                                 rotOffsetZ * matTrans[8]);
 
-    pose->panY = pose->panY - (   0 * matTrans[4] +
-                                160 * -matTrans[5] +
-                                -70 * -matTrans[6]);
+    pose->panY = pose->panY - (  rotOffsetX * matTrans[1] +
+                                 rotOffsetY * matTrans[5] +
+                                 rotOffsetZ * matTrans[9]);
 
-    pose->panZ = pose->panZ - (   0 * matTrans[8] +
-                                160 * -matTrans[9] +
-                                -70 * -matTrans[10]);
+    pose->panZ = pose->panZ - (  rotOffsetX * matTrans[2] +
+                                 rotOffsetY * matTrans[6] +
+                                 rotOffsetZ * matTrans[10]);
 
-    pose->panX = pose->panX * M_PI/500;
-    pose->panY = pose->panY * M_PI/500;
-    pose->panZ = pose->panZ * M_PI/500;
-    fprintf(stderr, "B: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
+    //fprintf(stderr, "B: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
+    pose->panX = pose->panX / 400;
+    pose->panY = pose->panY / 400;
+    pose->panZ = pose->panZ / 500;
+    fprintf(stderr, "Pose: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
     return 0;
 }
 
