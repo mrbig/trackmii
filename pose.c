@@ -52,6 +52,9 @@ void Initialize3PCapModel(point3Df dimensions3PtsCap[3]) {
     oldpose.yaw = 0;
     oldpose.roll = 0;
     oldpose.pitch = 0;
+    oldpose.panX = 0;
+    oldpose.panY = 0;
+    oldpose.panZ = 0;
 
     R01_v[0] = -1 * dimensions3PtsCap[0].x;
     R01_v[1] = -1 * dimensions3PtsCap[0].y;
@@ -374,9 +377,14 @@ void SmoothPose(TPose *pose, float fps) {
 
     SmoothingSize =  fps * gSmoothing * GLOBAL_SMOOTHING * 0.001;
 
-    delta.yaw = abs(pose->yaw - oldpose.yaw);
-    delta.roll = abs(pose->roll - oldpose.roll);
-    delta.pitch = abs(pose->pitch - oldpose.pitch);
+    delta.yaw   = fabs(pose->yaw - oldpose.yaw);
+    delta.roll  = fabs(pose->roll - oldpose.roll);
+    delta.pitch = fabs(pose->pitch - oldpose.pitch);
+    delta.panX  = fabs(pose->panX - oldpose.panX);
+    delta.panY  = fabs(pose->panY - oldpose.panY);
+    delta.panZ  = fabs(pose->panZ - oldpose.panZ);
+
+    int d = 360;
 
     pose->yaw = ((pose->yaw * delta.yaw) / (delta.yaw + SmoothingSize))
            + ((oldpose.yaw * SmoothingSize) / (delta.yaw + SmoothingSize));
@@ -384,11 +392,20 @@ void SmoothPose(TPose *pose, float fps) {
            + ((oldpose.roll * SmoothingSize) / (delta.roll + SmoothingSize));
     pose->pitch = ((pose->pitch * delta.pitch) / (delta.pitch + SmoothingSize))
            + ((oldpose.pitch * SmoothingSize) / (delta.pitch + SmoothingSize));
+    pose->panX = ((pose->panX * delta.panX) / (delta.panX + SmoothingSize/d))
+           + ((oldpose.panX * SmoothingSize/d) / (delta.panX + SmoothingSize/d));
+    pose->panY = ((pose->panY * delta.panY) / (delta.panY + SmoothingSize/d))
+           + ((oldpose.panY * SmoothingSize/d) / (delta.panY + SmoothingSize/d));
+    pose->panZ = ((pose->panZ * delta.panZ) / (delta.panZ + SmoothingSize/d))
+           + ((oldpose.panZ * SmoothingSize/d) / (delta.panZ + SmoothingSize/d));
 
 
-    oldpose.yaw = pose->yaw;
-    oldpose.roll = pose->roll;
+    oldpose.yaw   = pose->yaw;
+    oldpose.roll  = pose->roll;
     oldpose.pitch = pose->pitch;
+    oldpose.panX  = pose->panX;
+    oldpose.panY  = pose->panY;
+    oldpose.panZ  = pose->panZ;
 
     // Translation
     pose->yaw = ApplyTranslation(DOF_YAW, pose->yaw);
