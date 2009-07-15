@@ -30,8 +30,8 @@ extern "C" {
 #define RadToDeg(a) (a*180/M_PI)
 
 typedef struct point2D {
-    uint16_t x;
-    uint16_t y;
+    int16_t x;
+    int16_t y;
 } point2D;
 
 typedef struct point3Df {

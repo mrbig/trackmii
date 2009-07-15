@@ -140,9 +140,9 @@ void SortCap(point2D img[3]) {
     int i, idtop = 0;
     point2D sorted[3];
     
-    sorted[0].y = 0;
-    sorted[1].x = 6000;
-    sorted[2].x = 0;
+    sorted[0].y = -9000;
+    sorted[1].x = 9000;
+    sorted[2].x = -9000;
     
     for (i=0; i<3; i++) {
         if (img[i].y>sorted[0].y) {

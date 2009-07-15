@@ -331,8 +331,8 @@ int MyDrawingCallback (
     for (i=0; i<CWIID_IR_SRC_COUNT; i++) {
         if (state.ir_src[i].valid) {
             if (valid<3) {
-                pnts[valid].x = state.ir_src[i].pos[CWIID_X];
-                pnts[valid].y = state.ir_src[i].pos[CWIID_Y];
+                pnts[valid].x = state.ir_src[i].pos[CWIID_X] - 512;
+                pnts[valid].y = state.ir_src[i].pos[CWIID_Y] - 384;
             }
             valid++;
         }
