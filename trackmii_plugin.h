@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include "linux-track/cal.h"
+    
 #define TRACKMII_VERSION 2
 
 typedef struct basicTranslationCfg {
@@ -35,7 +37,10 @@ typedef struct basicTranslationCfg {
 basicTranslationCfg getTranslationCfg(int dof);
 void setTranslationCfg(int dof, basicTranslationCfg* cfg);
 
-void ConnectWiimote();
+void ConnectCam();
+void DisconnectCam();
+void SetCamDevice(enum cal_device_category_type category);
+enum cal_device_category_type GetCamDevice();
 
 int getConnectionState();
 

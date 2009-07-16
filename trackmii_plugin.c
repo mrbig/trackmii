@@ -35,7 +35,7 @@
 #include "pose.h"
 #include "gui.h"
 
-#include "linux-track/cal.h"
+
 #include "linux-track/tir4_driver.h"
 #include "linux-track/wiimote_driver.h"
 
@@ -140,10 +140,11 @@ PLUGIN_API int XPluginStart(
      */
     point3Df dimensions3PtsCap[3];
 
-    ccb.device.category = wiimote;
     ccb.mode = operational_3dot;
+    
+    SetCamDevice(wiimote);
 
-    ConnectWiimote();
+    ConnectCam();
     
     
     /* Register our hot key for the new view. */
@@ -232,8 +233,7 @@ PLUGIN_API void    XPluginStop(void)
     XPLMUnregisterCommandHandler(cmdOnOff, MyOnOffHandler, 0, 0);
     XPLMUnregisterCommandHandler(cmdCenter, MyCenteringHandler, 0, 0);
     DestroyGui();
-    if (connected) cal_shutdown(&ccb);
-    fprintf(stderr, "Wiimote closed\n");
+    DisconnectCam();
 }
 
 /*
@@ -272,11 +272,40 @@ PLUGIN_API void XPluginReceiveMessage(
 }
 
 /**
- * Connecting to the wiimote
+ * Set current cam category
  */
-void ConnectWiimote() {
+void SetCamDevice(enum cal_device_category_type category) {
+    ccb.device.category = category;
+}
+
+/**
+ * Get current cam category
+ */
+enum cal_device_category_type GetCamDevice() {
+    return ccb.device.category;
+}
+
+
+/**
+ * Connecting to the camera device
+ */
+void ConnectCam() {
 
     connected = !cal_init(&ccb);
+}
+
+/**
+ * Disconnecting from camera device
+ */
+void DisconnectCam() {
+    if (connected) {
+        if (!cal_shutdown(&ccb)) {
+            connected = false;
+        } else {
+            fprintf(stderr, "Error closing camera connection\n");
+        }
+    }
+    fprintf(stderr, "Camera disconnected\n");
 }
 
 /*

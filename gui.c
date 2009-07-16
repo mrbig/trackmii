@@ -45,24 +45,14 @@ XPWidgetID setupWindowWidget = NULL;
 XPWidgetID smoothingScrollbar = NULL;
 XPWidgetID smoothingValueCaption = NULL;
 
-XPWidgetID yawDeadzoneValueCaption = NULL;
-XPWidgetID yawDeadzoneScrollbar = NULL;
-XPWidgetID yawResponseValueCaption = NULL;
-XPWidgetID yawResponseScrollbar = NULL;
-XPWidgetID yawAmplificationValueCaption = NULL;
-XPWidgetID yawAmplificationScrollbar = NULL;
-
-XPWidgetID pitchDeadzoneValueCaption = NULL;
-XPWidgetID pitchDeadzoneScrollbar = NULL;
-XPWidgetID pitchResponseValueCaption = NULL;
-XPWidgetID pitchResponseScrollbar = NULL;
-XPWidgetID pitchAmplificationValueCaption = NULL;
-XPWidgetID pitchAmplificationScrollbar = NULL;
 
 XPWidgetID wiimoteConnected = NULL;
 XPWidgetID wiimoteDisconnected = NULL;
 XPWidgetID connectButton = NULL;
 XPWidgetID debugCheckbox = NULL;
+
+XPWidgetID radioWiimote = NULL;
+XPWidgetID radioTIR = NULL;
 
 typedef enum TrParams {deadzone, response, amplification} trParam;
 
@@ -153,7 +143,7 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
     else if (inMessage == xpMsg_PushButtonPressed)
     {
         if (inParam1 == (long)connectButton) {
-            ConnectWiimote();
+            ConnectCam();
             if (getConnectionState()) {
                 XPHideWidget(wiimoteDisconnected);
                 XPShowWidget(wiimoteConnected);
@@ -166,6 +156,20 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
     else if (inMessage == xpMsg_ButtonStateChanged) {
         if (inParam1 == (long)debugCheckbox) {
             ToggleDebugWindowVisible(inParam2);
+        }
+        else if (inParam1 == (long)radioWiimote) {
+            XPSetWidgetProperty(radioTIR, xpProperty_ButtonState, 0);
+            DisconnectCam();
+            SetCamDevice(wiimote);
+            XPShowWidget(wiimoteDisconnected);
+            XPHideWidget(wiimoteConnected);
+        }
+        else if (inParam1 == (long)radioTIR) {
+            XPSetWidgetProperty(radioWiimote, xpProperty_ButtonState, 0);
+            DisconnectCam();
+            SetCamDevice(tir4_camera);
+            XPShowWidget(wiimoteDisconnected);
+            XPHideWidget(wiimoteConnected);
         }
     }
     return 0;
@@ -291,7 +295,7 @@ void CreateSetupWindow()
     y2 = y - h;
 
     // Gray windows
-    XPWidgetID w1;
+    XPWidgetID w1, w2;
 
     setupWindowWidget = XPCreateWidget(x, y, x2, y2,
                                        1, // Visible
@@ -358,29 +362,61 @@ void CreateSetupWindow()
             "Depth translation setup",
             DOF_PANZ,
             translationWindows[4]);
+
+    /* linux-track device selector */
+    w2 = XPCreateWidget(x+530, y-30, x2-10, y-80, 1,
+                        "", 0, setupWindowWidget, xpWidgetClass_SubWindow);
+    XPSetWidgetProperty(w2, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
+
+    radioWiimote = XPCreateWidget(x + 540, y-40, x + 555, y - 55,
+                                        1,
+                                        "",
+                                        0,
+                                        setupWindowWidget,
+                                        xpWidgetClass_Button);
+    XPSetWidgetProperty(radioWiimote, xpProperty_ButtonType, xpRadioButton);
+    XPSetWidgetProperty(radioWiimote, xpProperty_ButtonBehavior, xpButtonBehaviorRadioButton);
+    XPCreateWidget(x+560, y-40, x2-20, y-55, 1, "use Wiimote", 0, setupWindowWidget, xpWidgetClass_Caption);
+    if (GetCamDevice() == wiimote) {
+        XPSetWidgetProperty(radioWiimote, xpProperty_ButtonState, 1);
+    }
     
+    radioTIR = XPCreateWidget(x + 540, y-55, x + 555, y - 70,
+                                        1,
+                                        "",
+                                        0,
+                                        setupWindowWidget,
+                                        xpWidgetClass_Button);
+    XPSetWidgetProperty(radioTIR, xpProperty_ButtonType, xpRadioButton);
+    XPSetWidgetProperty(radioTIR, xpProperty_ButtonBehavior, xpButtonBehaviorRadioButton);
+    XPCreateWidget(x+560, y-55, x2-20, y-70, 1, "use Track IR4", 0, setupWindowWidget, xpWidgetClass_Caption);
+    if (GetCamDevice() == tir4_camera) {
+        XPSetWidgetProperty(radioTIR, xpProperty_ButtonState, 1);
+    }
+
+
     /* Wiimote connected subwindows */
-    wiimoteConnected = XPCreateWidget(x+530, y-30, x2-10, y-200, 0,
+    wiimoteConnected = XPCreateWidget(x+530, y-90, x2-10, y-200, 0,
                                       "Wiimote is connected",
                                       0, setupWindowWidget, xpWidgetClass_SubWindow);
 
     XPSetWidgetProperty(wiimoteConnected, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
     XPAddWidgetCallback(wiimoteConnected, XPUFixedLayout);
-    LabelCentered(wiimoteConnected, x+540, y-95, x2-20, "Wiimote is connected");
+    LabelCentered(wiimoteConnected, x+540, y-140, x2-20, "Wiimote is connected");
 
     /* Wiimote disconnected subwindow, with connect button */
-    wiimoteDisconnected = XPCreateWidget(x+530, y-30, x2-10, y-200, 0,
+    wiimoteDisconnected = XPCreateWidget(x+530, y-90, x2-10, y-200, 0,
                                       "Wiimote is currently not connected",
                                       0, setupWindowWidget, xpWidgetClass_SubWindow);
 
     XPSetWidgetProperty(wiimoteDisconnected, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
     XPAddWidgetCallback(wiimoteDisconnected, XPUFixedLayout);
 
-    LabelCentered(wiimoteDisconnected, x+540, y-60, x2-20, "Wiimote is currently not connected");
-    LabelCentered(wiimoteDisconnected, x+540, y-80, x2-20, "To connect the wiimote you should put it");
-    LabelCentered(wiimoteDisconnected, x+540, y-93, x2-20, "first in discoverable mode (press 1+2),");
-    LabelCentered(wiimoteDisconnected, x+540, y-105, x2-20, "then click the button below.");
-    connectButton = XPCreateWidget(x + 540 + 40, y-130, x2 - 10-40, y - 147,
+    LabelCentered(wiimoteDisconnected, x+540, y-100, x2-20, "Wiimote is currently not connected");
+    LabelCentered(wiimoteDisconnected, x+540, y-120, x2-20, "To connect the wiimote you should put it");
+    LabelCentered(wiimoteDisconnected, x+540, y-133, x2-20, "first in discoverable mode (press 1+2),");
+    LabelCentered(wiimoteDisconnected, x+540, y-145, x2-20, "then click the button below.");
+    connectButton = XPCreateWidget(x + 540 + 40, y-170, x2 - 10-40, y - 187,
                                         1,
                                         "Connect to Wiimote",
                                         0,
