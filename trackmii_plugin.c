@@ -57,7 +57,7 @@ int gVersion = TRACKMII_VERSION;
 int gStateCheckIn = STATE_CHECK_INTERVAL;
 
 // Translation config
-basicTranslationCfg gTranslationCfg[2];
+basicTranslationCfg gTranslationCfg[6];
 
 XPLMCommandRef cmdOnOff = NULL;
 XPLMCommandRef cmdCenter = NULL;
@@ -177,17 +177,25 @@ PLUGIN_API int XPluginStart(
     Initialize3PCapModel(dimensions3PtsCap);
 
     // Initialize translation
-    gTranslationCfg[DOF_YAW].deadzone = 15;
-    gTranslationCfg[DOF_YAW].response = 5;
-    gTranslationCfg[DOF_YAW].amplification = 25;
+    gTranslationCfg[DOF_YAW].deadzone = 10;
+    gTranslationCfg[DOF_YAW].response = 9;
+    gTranslationCfg[DOF_YAW].amplification = 30;
 
-    gTranslationCfg[DOF_PITCH].deadzone = 15;
-    gTranslationCfg[DOF_PITCH].response = 5;
-    gTranslationCfg[DOF_PITCH].amplification = 25;
+    gTranslationCfg[DOF_PITCH].deadzone = 3;
+    gTranslationCfg[DOF_PITCH].response = 14;
+    gTranslationCfg[DOF_PITCH].amplification = 23;
 
     gTranslationCfg[DOF_PANX].deadzone = 15;
     gTranslationCfg[DOF_PANX].response = 2;
     gTranslationCfg[DOF_PANX].amplification = 4;
+
+    gTranslationCfg[DOF_PANY].deadzone = 15;
+    gTranslationCfg[DOF_PANY].response = 2;
+    gTranslationCfg[DOF_PANY].amplification = 4;
+
+    gTranslationCfg[DOF_PANZ].deadzone = 15;
+    gTranslationCfg[DOF_PANZ].response = 2;
+    gTranslationCfg[DOF_PANZ].amplification = 12;
 
     LoadSettings();
 
@@ -195,8 +203,8 @@ PLUGIN_API int XPluginStart(
     SetupTranslationCurve(DOF_PITCH, gTranslationCfg[DOF_PITCH]);
 
     SetupTranslationCurve(DOF_PANX, gTranslationCfg[DOF_PANX]);
-    SetupTranslationCurve(DOF_PANY, gTranslationCfg[DOF_PANX]);
-    SetupTranslationCurve(DOF_PANZ, gTranslationCfg[DOF_PANX]);
+    SetupTranslationCurve(DOF_PANY, gTranslationCfg[DOF_PANY]);
+    SetupTranslationCurve(DOF_PANZ, gTranslationCfg[DOF_PANZ]);
     
     /* We must return 1 to indicate successful initialization, otherwise we
      * will not be called back again. */
@@ -426,6 +434,7 @@ void SetupTranslationCurve(int dof, basicTranslationCfg cfg) {
     translationCfg trcfg;
 
     trcfg.P1.x = 0;   trcfg.P1.y = 0;
+    //fprintf(stderr, "=============================\ndz: %d, resp: %d, ampl: %d\n", cfg.deadzone, cfg.response, cfg.amplification);
 
     if (dof < DOF_PANX) {
         trcfg.C1.x = cfg.deadzone;  trcfg.C1.y = 2;
@@ -439,7 +448,7 @@ void SetupTranslationCurve(int dof, basicTranslationCfg cfg) {
 
         trcfg.C2.x = min(cfg.deadzone + cfg.response, 99);  trcfg.C2.y = sqrt((float)cfg.response/10);
 
-        trcfg.P2.x = 99;  trcfg.P2.y = 0.5+(float)cfg.amplification/10;
+        trcfg.P2.x = 99;  trcfg.P2.y = 0.5+(float)cfg.amplification/100;
     }
 
     /*
@@ -491,6 +500,7 @@ void SaveSettings() {
     char path[1024];
     int fd = 0;
     int smoothing;
+    //fprintf(stderr, "Saving settings\n");
 
     XPLMGetSystemPath(path);
 
