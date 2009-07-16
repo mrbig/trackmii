@@ -1,0 +1,12 @@
+.svn
+.deps
+xlinuxtrack*
+linux-track/Makefile*
+linux-track/bulk_config_data.bin
+linux-track/math_utils.*
+linux-track/pose.*
+linux-track/*_test.c
+linux-track/pose_test
+linux-track/tir4_driver_test
+linux-track/wiimote_driver_test
+core

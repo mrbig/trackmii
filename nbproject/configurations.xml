@@ -17,9 +17,12 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>../linux-track/src/cal.c</itemPath>
       <itemPath>gui.c</itemPath>
       <itemPath>pose.c</itemPath>
+      <itemPath>linux-track/tir4_driver.c</itemPath>
       <itemPath>trackmii.c</itemPath>
+      <itemPath>linux-track/wiimote_driver.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -46,11 +49,20 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="../linux-track/src/cal.c">
+        <itemTool>0</itemTool>
+      </item>
       <item path="gui.c">
         <itemTool>0</itemTool>
       </item>
       <item path="gui.h">
         <itemTool>3</itemTool>
+      </item>
+      <item path="linux-track/tir4_driver.c">
+        <itemTool>0</itemTool>
+      </item>
+      <item path="linux-track/wiimote_driver.c">
+        <itemTool>0</itemTool>
       </item>
       <item path="pose.c">
         <itemTool>0</itemTool>
@@ -90,11 +102,20 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="../linux-track/src/cal.c">
+        <itemTool>0</itemTool>
+      </item>
       <item path="gui.c">
         <itemTool>0</itemTool>
       </item>
       <item path="gui.h">
         <itemTool>3</itemTool>
+      </item>
+      <item path="linux-track/tir4_driver.c">
+        <itemTool>0</itemTool>
+      </item>
+      <item path="linux-track/wiimote_driver.c">
+        <itemTool>0</itemTool>
       </item>
       <item path="pose.c">
         <itemTool>0</itemTool>
@@ -131,6 +152,7 @@
           <linkerLibItems>
             <linkerLibLibItem>cwiid</linkerLibLibItem>
             <linkerLibLibItem>m</linkerLibLibItem>
+            <linkerLibLibItem>usb</linkerLibLibItem>
           </linkerLibItems>
           <commandLine>-shared</commandLine>
         </linkerTool>
@@ -167,11 +189,20 @@
                             group="sys"/>
         </packFileList>
       </packaging>
+      <item path="../linux-track/src/cal.c">
+        <itemTool>0</itemTool>
+      </item>
       <item path="gui.c">
         <itemTool>0</itemTool>
       </item>
       <item path="gui.h">
         <itemTool>3</itemTool>
+      </item>
+      <item path="linux-track/tir4_driver.c">
+        <itemTool>0</itemTool>
+      </item>
+      <item path="linux-track/wiimote_driver.c">
+        <itemTool>0</itemTool>
       </item>
       <item path="pose.c">
         <itemTool>0</itemTool>

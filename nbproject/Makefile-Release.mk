@@ -30,7 +30,10 @@ OBJECTDIR=build/Release/${PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/trackmii.o \
 	${OBJECTDIR}/pose.o \
+	${OBJECTDIR}/linux-track/wiimote_driver.o \
+	${OBJECTDIR}/linux-track/tir4_driver.o \
 	${OBJECTDIR}/gui.o \
+	${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src/cal.o \
 	${OBJECTDIR}/trackmii_plugin.o
 
 # C Compiler Flags
@@ -64,10 +67,25 @@ ${OBJECTDIR}/pose.o: pose.c
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/pose.o pose.c
 
+${OBJECTDIR}/linux-track/wiimote_driver.o: linux-track/wiimote_driver.c 
+	${MKDIR} -p ${OBJECTDIR}/linux-track
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/linux-track/wiimote_driver.o linux-track/wiimote_driver.c
+
+${OBJECTDIR}/linux-track/tir4_driver.o: linux-track/tir4_driver.c 
+	${MKDIR} -p ${OBJECTDIR}/linux-track
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/linux-track/tir4_driver.o linux-track/tir4_driver.c
+
 ${OBJECTDIR}/gui.o: gui.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/gui.o gui.c
+
+${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src/cal.o: ../linux-track/src/cal.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src/cal.o ../linux-track/src/cal.c
 
 ${OBJECTDIR}/trackmii_plugin.o: trackmii_plugin.c 
 	${MKDIR} -p ${OBJECTDIR}

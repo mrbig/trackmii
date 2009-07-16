@@ -19,7 +19,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <cwiid.h>
 #include <math.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -36,14 +35,22 @@
 #include "pose.h"
 #include "gui.h"
 
+#include "linux-track/cal.h"
+#include "linux-track/tir4_driver.h"
+#include "linux-track/wiimote_driver.h"
+
 /*
  * Global Variables.  We will store our single window globally.
  */
 
 XPLMWindowID    gWindow = NULL;
 
-// Wiimote handler
-cwiid_wiimote_t *gWiimote = NULL;
+// Connection status
+bool connected = false;
+
+// Connection handler
+struct camera_control_block ccb;
+
 
 int gFreeView = 0;
 
@@ -54,7 +61,6 @@ int gValid = 0;
 
 int gVersion = TRACKMII_VERSION;
 
-int gStateCheckIn = STATE_CHECK_INTERVAL;
 
 // Translation config
 basicTranslationCfg gTranslationCfg[6];
@@ -133,6 +139,9 @@ PLUGIN_API int XPluginStart(
      * Wiimote initialization
      */
     point3Df dimensions3PtsCap[3];
+
+    ccb.device.category = wiimote;
+    ccb.mode = operational_3dot;
 
     ConnectWiimote();
     
@@ -223,7 +232,7 @@ PLUGIN_API void    XPluginStop(void)
     XPLMUnregisterCommandHandler(cmdOnOff, MyOnOffHandler, 0, 0);
     XPLMUnregisterCommandHandler(cmdCenter, MyCenteringHandler, 0, 0);
     DestroyGui();
-    if (gWiimote) cwiid_close(gWiimote);
+    if (connected) cal_shutdown(&ccb);
     fprintf(stderr, "Wiimote closed\n");
 }
 
@@ -266,21 +275,8 @@ PLUGIN_API void XPluginReceiveMessage(
  * Connecting to the wiimote
  */
 void ConnectWiimote() {
-    bdaddr_t bdaddr;
 
-    bdaddr = *BDADDR_ANY;
-#ifndef WIIMOTE_DISABLED
-
-    fprintf(stderr, "Put Wiimote in discoverable mode now (press 1+2)...\n");
-
-    if (!(gWiimote = cwiid_open(&bdaddr, 0))) {
-        fprintf(stderr, "Wiimote not found\n");
-    } else {
-        cwiid_set_led(gWiimote, CWIID_LED1_ON | CWIID_LED4_ON);
-        cwiid_set_rpt_mode(gWiimote, CWIID_RPT_STATUS | CWIID_RPT_IR);
-        fprintf(stderr, "Wiimote connected\n");
-    }
-#endif
+    connected = !cal_init(&ccb);
 }
 
 /*
@@ -318,7 +314,7 @@ void MyDrawWindowCallback(
                    buf, NULL, xplmFont_Basic);
 
     sprintf(buf, "    leds: %d ", gValid);
-    if (!gWiimote) {
+    if (!connected) {
         strcat(buf, "(tracking off)");
     }
     else if (gValid == 3) {
@@ -342,45 +338,21 @@ int MyDrawingCallback (
                                    int                  inIsBefore,    
                                    void *               inRefcon)
 {
-    // TODO: disable callback, when not needed
-    if (!gFreeView || !gWiimote) return 1;
-
-    int i, valid;
+    int i;
     float fps;
-    struct cwiid_state state;
     point2D pnts[3];
+    struct frame_type frame;
 
-    if (!gStateCheckIn--) {
-        gStateCheckIn = STATE_CHECK_INTERVAL;
+    if (!gFreeView || !connected) return 1;
 
-        if (cwiid_request_status(gWiimote)) {
-            fprintf(stderr, "Requesting status failed, disconnecting\n");
-            cwiid_close(gWiimote);
-            gWiimote = NULL;
-            return 1;
-        }
+    cal_get_frame(&ccb, &frame);
+
+    for (i=0; i<frame.bloblist.num_blobs; i++) {
+        pnts[i].x = frame.bloblist.blobs[i].x;
+        pnts[i].y = frame.bloblist.blobs[i].y;
     }
 
-    if (cwiid_get_state(gWiimote, &state)) {
-        // Treat connection as disconnected on error
-        fprintf(stderr, "Error reading wiimote state\n");
-        cwiid_close(gWiimote);
-        gWiimote = NULL;
-        return 1;
-    }
-
-    valid = 0;
-    for (i=0; i<CWIID_IR_SRC_COUNT; i++) {
-        if (state.ir_src[i].valid) {
-            if (valid<3) {
-                pnts[valid].x = state.ir_src[i].pos[CWIID_X] - 512;
-                pnts[valid].y = state.ir_src[i].pos[CWIID_Y] - 384;
-            }
-            valid++;
-        }
-    }
-
-    if (valid == 3 && !AlterPose(pnts, &gPose)) {
+    if (frame.bloblist.num_blobs == 3 && !AlterPose(pnts, &gPose)) {
         PoseToDegrees(&gPose);
         fps = XPLMGetDataf(gFrameRatePeriodDf);
         // During pause fps is zero
@@ -394,7 +366,8 @@ int MyDrawingCallback (
         XPLMSetDataf(gPilotHeadY, gDefaultPilotHead.y+gPose.panY);
         XPLMSetDataf(gPilotHeadZ, gDefaultPilotHead.z+gPose.panZ);
     }
-    gValid = valid;
+    gValid = frame.bloblist.num_blobs;
+    frame_free(&ccb, &frame);
 
     return 1;
 }
@@ -485,12 +458,7 @@ void setTranslationCfg(int dof, basicTranslationCfg *cfg) {
  * Returns 1 if connection is ok, 0 if not connected
  */
 int getConnectionState() {
-    if (gWiimote && cwiid_request_status(gWiimote)) {
-        fprintf(stderr, "Requesting status failed, disconnecting\n");
-        cwiid_close(gWiimote);
-        gWiimote = NULL;
-    }
-    return gWiimote ? 1 : 0;
+    return connected;
 }
 
 /**
