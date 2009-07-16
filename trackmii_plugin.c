@@ -397,6 +397,7 @@ int MyDrawingCallback (
 int MyOnOffHandler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
     if ( inPhase == 2 ) {
+        if (!gFreeView) SetCenter();
         if (XPLMGetDatai(gViewType) == VIEW_FORWARDS) {
             // We save current head position for reference
             gDefaultPilotHead.x = XPLMGetDataf(gPilotHeadX);
@@ -415,7 +416,7 @@ int MyOnOffHandler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inR
 int MyCenteringHandler(XPLMCommandRef inCommand, XPLMCommandPhase inPhase, void* inRefcon)
 {
     if ( inPhase == 2 ) {
-        SetCenter(&gPose);
+        SetCenter();
     }
 
     return 0;

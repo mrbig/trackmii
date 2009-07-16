@@ -350,7 +350,7 @@ int AlterPose(point2D img[3], TPose *pose) {
     pose->panX = pose->panX / TRANS_PI_RANGE;
     pose->panY = pose->panY / TRANS_PI_RANGE;
     pose->panZ = pose->panZ / TRANS_PI_RANGE;
-    fprintf(stderr, "Pose: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
+    //fprintf(stderr, "Pose: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
     return 0;
 }
 
@@ -442,7 +442,7 @@ void SmoothPose(TPose *pose, float fps) {
 
 }
 
-void SetCenter(TPose *pose) {
+void SetCenter() {
     doCentering = 1;
 }
 

@@ -82,7 +82,7 @@ void SmoothPose(TPose *pose, float fps);
 
 float CalculateHeadYaw(point2D pnts[3]);
 
-void SetCenter(TPose *pose);
+void SetCenter();
 
 int getSmoothing();
 
