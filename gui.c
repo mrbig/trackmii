@@ -60,6 +60,17 @@ XPWidgetID wiimoteDisconnected = NULL;
 XPWidgetID connectButton = NULL;
 XPWidgetID debugCheckbox = NULL;
 
+typedef enum TrParams {deadzone, response, amplification} trParam;
+
+typedef struct trSetup {
+    XPWidgetID scrollbar;
+    XPWidgetID caption;
+    trParam trParam;
+    int dof;
+} trSetup;
+
+trSetup translationWindows[2][3];
+
 /**
  * Initializing menu, and other gui stuff
  */
@@ -92,6 +103,7 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
 {
     char buff[255];
     long tmp;
+    int i, j;
     basicTranslationCfg trcfg;
     if (inMessage == xpMessage_CloseButtonPushed)
     {
@@ -102,6 +114,29 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
     {
         
 
+        for (i=0; i<2; i++) {
+            for (j=0; j<3; j++) {
+                if (inParam1 == (long)translationWindows[i][j].scrollbar) {
+                    tmp = XPGetWidgetProperty(translationWindows[i][j].scrollbar,
+                            xpProperty_ScrollBarSliderPosition,
+                            NULL);
+
+                    trcfg = getTranslationCfg(translationWindows[i][j].dof);
+                    switch (translationWindows[i][j].trParam) {
+                        case deadzone:
+                            trcfg.deadzone = tmp; break;
+                        case response:
+                            trcfg.response = tmp; break;
+                        case amplification:
+                            trcfg.amplification = tmp; break;
+                    }
+                    setTranslationCfg(translationWindows[i][j].dof, &trcfg);
+                    sprintf(buff, "%ld", tmp);
+                    XPSetWidgetDescriptor(translationWindows[i][j].caption, buff);
+                    return 0;
+                }
+            }
+        }
         if (inParam1 == (long)smoothingScrollbar) {
             tmp = XPGetWidgetProperty(smoothingScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
 
@@ -109,70 +144,6 @@ int SetupWindowHandler(XPWidgetMessage inMessage,
 
             sprintf(buff, "%ld", tmp);
             XPSetWidgetDescriptor(smoothingValueCaption, buff);
-        }
-
-        /* yaw scrollbars */
-        else if (inParam1 == (long)yawDeadzoneScrollbar) {
-            tmp = XPGetWidgetProperty(yawDeadzoneScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
-
-            trcfg = getTranslationCfg(DOF_YAW);
-            trcfg.deadzone = tmp;
-            setTranslationCfg(DOF_YAW, &trcfg);
-
-            sprintf(buff, "%ld", tmp);
-            XPSetWidgetDescriptor(yawDeadzoneValueCaption, buff);
-        }
-        else if (inParam1 == (long)yawResponseScrollbar) {
-            tmp = XPGetWidgetProperty(yawResponseScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
-
-            trcfg = getTranslationCfg(DOF_YAW);
-            trcfg.response = tmp;
-            setTranslationCfg(DOF_YAW, &trcfg);
-
-            sprintf(buff, "%ld", tmp);
-            XPSetWidgetDescriptor(yawResponseValueCaption, buff);
-        }
-        else if (inParam1 == (long)yawAmplificationScrollbar) {
-            tmp = XPGetWidgetProperty(yawAmplificationScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
-
-            trcfg = getTranslationCfg(DOF_YAW);
-            trcfg.amplification = tmp;
-            setTranslationCfg(DOF_YAW, &trcfg);
-
-            sprintf(buff, "%ld", tmp);
-            XPSetWidgetDescriptor(yawAmplificationValueCaption, buff);
-        }
-
-        /* pitch scrollbars */
-        else if (inParam1 == (long)pitchDeadzoneScrollbar) {
-            tmp = XPGetWidgetProperty(pitchDeadzoneScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
-
-            trcfg = getTranslationCfg(DOF_PITCH);
-            trcfg.deadzone = tmp;
-            setTranslationCfg(DOF_PITCH, &trcfg);
-
-            sprintf(buff, "%ld", tmp);
-            XPSetWidgetDescriptor(pitchDeadzoneValueCaption, buff);
-        }
-        else if (inParam1 == (long)pitchResponseScrollbar) {
-            tmp = XPGetWidgetProperty(pitchResponseScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
-
-            trcfg = getTranslationCfg(DOF_PITCH);
-            trcfg.response = tmp;
-            setTranslationCfg(DOF_PITCH, &trcfg);
-
-            sprintf(buff, "%ld", tmp);
-            XPSetWidgetDescriptor(pitchResponseValueCaption, buff);
-        }
-        else if (inParam1 == (long)pitchAmplificationScrollbar) {
-            tmp = XPGetWidgetProperty(pitchAmplificationScrollbar, xpProperty_ScrollBarSliderPosition, NULL);
-
-            trcfg = getTranslationCfg(DOF_PITCH);
-            trcfg.amplification = tmp;
-            setTranslationCfg(DOF_PITCH, &trcfg);
-
-            sprintf(buff, "%ld", tmp);
-            XPSetWidgetDescriptor(pitchAmplificationValueCaption, buff);
         }
     }
     else if (inMessage == xpMsg_PushButtonPressed)
@@ -242,6 +213,48 @@ void CreateScrollbar(XPWidgetID *setupWindowWidget,
     XPSetWidgetProperty(*scrollbar, xpProperty_ScrollBarSliderPosition, value);
 }
 
+void CreateTranslationSetupWindow(XPWidgetID *parent, int x, int y, char *label, int dof, trSetup *setup) {
+    XPWidgetID w;
+    basicTranslationCfg trcfg;
+    fprintf(stderr, "creating window at %d, %d\n", x, y);
+    
+    w = XPCreateWidget(x, y, x+285, y-110, 1,
+                       "", 0, parent, xpWidgetClass_SubWindow);
+    XPSetWidgetProperty(w, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
+
+    /* yaw deadzone scrollbar */
+    XPCreateWidget(x+5, y, x + 70, y-20, 1, label, 0, parent, xpWidgetClass_Caption);
+
+    trcfg = getTranslationCfg(dof);
+
+    CreateScrollbar(parent, &setup[0].scrollbar, &setup[0].caption,
+            "Deadzone:",
+            x+10, y-25, x+270,
+            trcfg.deadzone,
+            0, 30);
+
+    CreateScrollbar(parent, &setup[1].scrollbar, &setup[1].caption,
+            "Response:",
+            x+10, y-55, x+270,
+            trcfg.response,
+            0, 80);
+
+    CreateScrollbar(parent, &setup[2].scrollbar, &setup[2].caption,
+            "Amplification:",
+            x+10, y-85, x+270,
+            trcfg.amplification,
+            0, 100);
+
+    setup[0].dof       = dof;
+    setup[0].trParam   = deadzone;
+
+    setup[1].dof       = dof;
+    setup[1].trParam   = response;
+
+    setup[2].dof       = dof;
+    setup[2].trParam   = amplification;
+}
+
 /**
  * Here we create the setup window, and all it's sub widgets
  */
@@ -292,60 +305,18 @@ void CreateSetupWindow()
     XPCreateWidget(x+415, y-50, x2-20, y-65, 1, "show debug window", 0, setupWindowWidget, xpWidgetClass_Caption);
 
     /* yaw subwindow */
-    w2 = XPCreateWidget(x+10, y-90, x+295, y-200, 1,
-                        "", 0, setupWindowWidget, xpWidgetClass_SubWindow);
-    XPSetWidgetProperty(w2, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
-    
-    /* yaw deadzone scrollbar */
-    XPCreateWidget(x+15, y - 90, x + 80, y-110, 1, "Yaw translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
-
-    trcfg = getTranslationCfg(DOF_YAW);
-
-    CreateScrollbar(setupWindowWidget, &yawDeadzoneScrollbar, &yawDeadzoneValueCaption,
-            "Deadzone:",
-            x+20, y-115, x+280,
-            trcfg.deadzone,
-            0, 30);
-
-    CreateScrollbar(setupWindowWidget, &yawResponseScrollbar, &yawResponseValueCaption,
-            "Response:",
-            x+20, y-145, x+280,
-            trcfg.response,
-            0, 80);
-
-    CreateScrollbar(setupWindowWidget, &yawAmplificationScrollbar, &yawAmplificationValueCaption,
-            "Amplification:",
-            x+20, y-175, x+280,
-            trcfg.amplification,
-            0, 100);
+    CreateTranslationSetupWindow(setupWindowWidget,
+            x+10, y-90,
+            "Yaw translation setup",
+            DOF_YAW,
+            translationWindows[0]);
 
     /* pitch subwindow */
-    w3 = XPCreateWidget(x+305, y-90, x2-10, y-200, 1,
-                        "", 0, setupWindowWidget, xpWidgetClass_SubWindow);
-    XPSetWidgetProperty(w3, xpProperty_SubWindowType, xpSubWindowStyle_SubWindow);
-
-    /* pitch deadzone scrollbar */
-    XPCreateWidget(x+310, y - 90, x + 380, y-110, 1, "Pitch translation setup", 0, setupWindowWidget, xpWidgetClass_Caption);
-
-    trcfg = getTranslationCfg(DOF_PITCH);
-
-    CreateScrollbar(setupWindowWidget, &pitchDeadzoneScrollbar, &pitchDeadzoneValueCaption,
-            "Deadzone:",
-            x+315, y-115, x2-20,
-            trcfg.deadzone,
-            0, 30);
-
-    CreateScrollbar(setupWindowWidget, &pitchResponseScrollbar, &pitchResponseValueCaption,
-            "Response:",
-            x+315, y-145, x2-20,
-            trcfg.response,
-            0, 80);
-
-    CreateScrollbar(setupWindowWidget, &pitchAmplificationScrollbar, &pitchAmplificationValueCaption,
-            "Amplification:",
-            x+315, y-175, x2-20,
-            trcfg.amplification,
-            0, 100);
+    CreateTranslationSetupWindow(setupWindowWidget,
+            x+305, y-90,
+            "Pitch translation setup",
+            DOF_PITCH,
+            translationWindows[1]);
 
     /* Wiimote connected subwindows */
     wiimoteConnected = XPCreateWidget(x+40, y-235, x2-40, y2+25, 0,
