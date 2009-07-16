@@ -185,10 +185,18 @@ PLUGIN_API int XPluginStart(
     gTranslationCfg[DOF_PITCH].response = 5;
     gTranslationCfg[DOF_PITCH].amplification = 25;
 
+    gTranslationCfg[DOF_PANX].deadzone = 15;
+    gTranslationCfg[DOF_PANX].response = 2;
+    gTranslationCfg[DOF_PANX].amplification = 4;
+
     LoadSettings();
 
     SetupTranslationCurve(DOF_YAW, gTranslationCfg[DOF_YAW]);
     SetupTranslationCurve(DOF_PITCH, gTranslationCfg[DOF_PITCH]);
+
+    SetupTranslationCurve(DOF_PANX, gTranslationCfg[DOF_PANX]);
+    SetupTranslationCurve(DOF_PANY, gTranslationCfg[DOF_PANX]);
+    SetupTranslationCurve(DOF_PANZ, gTranslationCfg[DOF_PANX]);
     
     /* We must return 1 to indicate successful initialization, otherwise we
      * will not be called back again. */
@@ -418,18 +426,27 @@ void SetupTranslationCurve(int dof, basicTranslationCfg cfg) {
 
     trcfg.P1.x = 0;   trcfg.P1.y = 0;
 
-    trcfg.C1.x = cfg.deadzone;  trcfg.C1.y = 2;
+    if (dof < DOF_PANX) {
+        trcfg.C1.x = cfg.deadzone;  trcfg.C1.y = 2;
 
-    trcfg.C2.x = min(cfg.deadzone + cfg.response, 99);  trcfg.C2.y = 2+sqrt(cfg.response);
+        trcfg.C2.x = min(cfg.deadzone + cfg.response, 99);  trcfg.C2.y = 2+sqrt(cfg.response);
 
-    trcfg.P2.x = 99;  trcfg.P2.y = 220+4*cfg.amplification;
+        trcfg.P2.x = 99;  trcfg.P2.y = 220+4*cfg.amplification;
+    } else {
+        // translation need much smaller results
+        trcfg.C1.x = cfg.deadzone;  trcfg.C1.y = 0.1;
+
+        trcfg.C2.x = min(cfg.deadzone + cfg.response, 99);  trcfg.C2.y = sqrt((float)cfg.response/10);
+
+        trcfg.P2.x = 99;  trcfg.P2.y = 0.5+(float)cfg.amplification/10;
+    }
 
     /*
     fprintf(stderr, "New translation config for dof %d is:\n", dof);
-    fprintf(stderr, "P1.x=%d P1.y=%d\n", trcfg.P1.x, trcfg.P1.y);
-    fprintf(stderr, "C1.x=%d C1.y=%d\n", trcfg.C1.x, trcfg.C1.y);
-    fprintf(stderr, "C2.x=%d C2.y=%d\n", trcfg.C2.x, trcfg.C2.y);
-    fprintf(stderr, "P2.x=%d P2.y=%d\n", trcfg.P2.x, trcfg.P2.y);
+    fprintf(stderr, "P1.x=%f P1.y=%f\n", trcfg.P1.x, trcfg.P1.y);
+    fprintf(stderr, "C1.x=%f C1.y=%f\n", trcfg.C1.x, trcfg.C1.y);
+    fprintf(stderr, "C2.x=%f C2.y=%f\n", trcfg.C2.x, trcfg.C2.y);
+    fprintf(stderr, "P2.x=%f P2.y=%f\n", trcfg.P2.x, trcfg.P2.y);
      //*/
 
     InitializeCurve(dof, trcfg);

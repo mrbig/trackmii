@@ -34,6 +34,11 @@ typedef struct point2D {
     int16_t y;
 } point2D;
 
+typedef struct point2Df {
+    float x;
+    float y;
+} point2Df;
+
 typedef struct point3Df {
     float x;
     float y;
@@ -51,14 +56,18 @@ typedef struct {
 } TPose;
 
 typedef struct translationCfg {
-    point2D P1;
-    point2D C1;
-    point2D C2;
-    point2D P2;
+    point2Df P1;
+    point2Df C1;
+    point2Df C2;
+    point2Df P2;
 } translationCfg;
 
 #define DOF_YAW 0
 #define DOF_PITCH 1
+#define DOF_ROLL 2
+#define DOF_PANX 3
+#define DOF_PANY 4
+#define DOF_PANZ 5
 
 
 void Initialize3PCapModel(point3Df dimensions3PtsCap[3]);

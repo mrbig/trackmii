@@ -26,6 +26,7 @@
 #include <GL/gl.h>
 
 #define sqr(z)	((z) * (z))
+#define TRANS_PI_RANGE (500/M_PI)
 
 float R01, R02, R12;
 
@@ -40,7 +41,10 @@ TPose center;
 
 int gSmoothing = 15;
 
-float RespCurve[2][100000];
+// If set to 1 we do centering in this cycle
+int doCentering = 0;
+
+float RespCurve[6][100000];
 
 #define GLOBAL_SMOOTHING 100
 
@@ -343,9 +347,9 @@ int AlterPose(point2D img[3], TPose *pose) {
                                  rotOffsetZ * matTrans[10]);
 
     //fprintf(stderr, "B: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
-    pose->panX = pose->panX / 400;
-    pose->panY = pose->panY / 400;
-    pose->panZ = pose->panZ / 500;
+    pose->panX = pose->panX / TRANS_PI_RANGE;
+    pose->panY = pose->panY / TRANS_PI_RANGE;
+    pose->panZ = pose->panZ / TRANS_PI_RANGE;
     fprintf(stderr, "Pose: x: %f, y: %f, z: %f\n", pose->panX, pose->panY, pose->panZ);
     return 0;
 }
@@ -357,6 +361,11 @@ void PoseToDegrees(TPose *pose) {
     pose->yaw = pose->yaw * 180 / M_PI;
     pose->roll = pose->roll * 180 / M_PI;
     pose->pitch = pose->pitch * 180 / M_PI;
+    // Translation values are amplified too, so we can use
+    // the same translation curves
+    pose->panX = pose->panX * 180 / M_PI;
+    pose->panY = pose->panY * 180 / M_PI;
+    pose->panZ = pose->panZ * 180 / M_PI;
 }
 
 /**
@@ -365,7 +374,7 @@ void PoseToDegrees(TPose *pose) {
 float ApplyTranslation(int dof, float value) {
     int mult;
     mult = value >= 0 ? 1 : -1;
-    return mult * RespCurve[dof][(int)floor(mult * value * 1000)];
+    return mult * RespCurve[dof][min((int)floor(mult * value * 1000), 100000)];
 }
 
 /**
@@ -374,6 +383,24 @@ float ApplyTranslation(int dof, float value) {
 void SmoothPose(TPose *pose, float fps) {
     float SmoothingSize;
     TPose delta;
+
+    if (doCentering) {
+        center.pitch = pose->pitch;
+        center.roll  = pose->roll;
+        center.yaw   = pose->yaw;
+        center.panX  = pose->panX;
+        center.panY  = pose->panY;
+        center.panZ  = pose->panZ;
+        doCentering = 0;
+    }
+
+    // Apply centering;
+    pose->pitch -= center.pitch;
+    pose->roll  -= center.roll;
+    pose->yaw   -= center.yaw;
+    pose->panX  -= center.panX;
+    pose->panY  -= center.panY;
+    pose->panZ  -= center.panZ;
 
     SmoothingSize =  fps * gSmoothing * GLOBAL_SMOOTHING * 0.001;
 
@@ -384,20 +411,18 @@ void SmoothPose(TPose *pose, float fps) {
     delta.panY  = fabs(pose->panY - oldpose.panY);
     delta.panZ  = fabs(pose->panZ - oldpose.panZ);
 
-    int d = 360;
-
     pose->yaw = ((pose->yaw * delta.yaw) / (delta.yaw + SmoothingSize))
            + ((oldpose.yaw * SmoothingSize) / (delta.yaw + SmoothingSize));
     pose->roll = ((pose->roll * delta.roll) / (delta.roll + SmoothingSize))
            + ((oldpose.roll * SmoothingSize) / (delta.roll + SmoothingSize));
     pose->pitch = ((pose->pitch * delta.pitch) / (delta.pitch + SmoothingSize))
            + ((oldpose.pitch * SmoothingSize) / (delta.pitch + SmoothingSize));
-    pose->panX = ((pose->panX * delta.panX) / (delta.panX + SmoothingSize/d))
-           + ((oldpose.panX * SmoothingSize/d) / (delta.panX + SmoothingSize/d));
-    pose->panY = ((pose->panY * delta.panY) / (delta.panY + SmoothingSize/d))
-           + ((oldpose.panY * SmoothingSize/d) / (delta.panY + SmoothingSize/d));
-    pose->panZ = ((pose->panZ * delta.panZ) / (delta.panZ + SmoothingSize/d))
-           + ((oldpose.panZ * SmoothingSize/d) / (delta.panZ + SmoothingSize/d));
+    pose->panX = ((pose->panX * delta.panX) / (delta.panX + SmoothingSize))
+           + ((oldpose.panX * SmoothingSize) / (delta.panX + SmoothingSize));
+    pose->panY = ((pose->panY * delta.panY) / (delta.panY + SmoothingSize))
+           + ((oldpose.panY * SmoothingSize) / (delta.panY + SmoothingSize));
+    pose->panZ = ((pose->panZ * delta.panZ) / (delta.panZ + SmoothingSize))
+           + ((oldpose.panZ * SmoothingSize) / (delta.panZ + SmoothingSize));
 
 
     oldpose.yaw   = pose->yaw;
@@ -411,22 +436,14 @@ void SmoothPose(TPose *pose, float fps) {
     pose->yaw = ApplyTranslation(DOF_YAW, pose->yaw);
     pose->pitch = ApplyTranslation(DOF_PITCH, pose->pitch);
 
-    // Apply centering;
-    pose->pitch -= center.pitch;
-    pose->roll  -= center.roll;
-    pose->yaw   -= center.yaw;
-    pose->panX  -= center.panX;
-    pose->panY  -= center.panY;
-    pose->panZ  -= center.panZ;
+    pose->panX = ApplyTranslation(DOF_PANX, pose->panX);
+    pose->panY = ApplyTranslation(DOF_PANY, pose->panY);
+    pose->panZ = ApplyTranslation(DOF_PANZ, pose->panZ);
+
 }
 
 void SetCenter(TPose *pose) {
-    center.pitch = pose->pitch + center.pitch;
-    center.roll  = pose->roll + center.roll;
-    center.yaw   = pose->yaw + center.yaw;
-    center.panX  = pose->panX + center.panX;
-    center.panY  = pose->panY + center.panY;
-    center.panZ  = pose->panZ + center.panZ;
+    doCentering = 1;
 }
 
 int getSmoothing()
