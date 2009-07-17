@@ -26,7 +26,7 @@ extern "C" {
 
 #include "linux-track/cal.h"
     
-#define TRACKMII_VERSION 2
+#define TRACKMII_VERSION 3
 
 typedef struct basicTranslationCfg {
     int deadzone;

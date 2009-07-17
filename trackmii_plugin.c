@@ -141,10 +141,11 @@ PLUGIN_API int XPluginStart(
     point3Df dimensions3PtsCap[3];
 
     ccb.mode = operational_3dot;
-    
+
+    // Default for now
     SetCamDevice(wiimote);
 
-    ConnectCam();
+    
     
     
     /* Register our hot key for the new view. */
@@ -207,7 +208,10 @@ PLUGIN_API int XPluginStart(
     gTranslationCfg[DOF_PANZ].response = 2;
     gTranslationCfg[DOF_PANZ].amplification = 12;
 
+    // LoadSettings sets also cam mode
     LoadSettings();
+
+    ConnectCam();
 
     SetupTranslationCurve(DOF_YAW, gTranslationCfg[DOF_YAW]);
     SetupTranslationCurve(DOF_PITCH, gTranslationCfg[DOF_PITCH]);
@@ -497,11 +501,14 @@ void SaveSettings() {
     char path[1024];
     int fd = 0;
     int smoothing;
+    enum cal_device_category_type device;
     //fprintf(stderr, "Saving settings\n");
 
     XPLMGetSystemPath(path);
 
     strcat(path, "Output/preferences/trackmii.prf");
+
+    device = GetCamDevice();
 
     fd = open( path, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH );
 
@@ -509,6 +516,7 @@ void SaveSettings() {
     write( fd, &gVersion, sizeof(int));
     write( fd, &smoothing, sizeof(int));
     write( fd, gTranslationCfg, sizeof( gTranslationCfg ));
+    write( fd, &device, sizeof(device));
     
     close( fd );
 
@@ -523,6 +531,7 @@ void LoadSettings() {
     int fd = 0;
     int smoothing;
     int ver;
+    enum cal_device_category_type device;
 
     XPLMGetSystemPath(path);
 
@@ -547,8 +556,13 @@ void LoadSettings() {
         close(fd);
         return;
     }
+    if (!read(fd, &device, sizeof( device ))) {
+        close(fd);
+        return;
+    }
 
     setSmoothing(smoothing);
+    SetCamDevice(device);
 
     fprintf(stderr, "Settings loaded\n");
 
