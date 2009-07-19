@@ -143,7 +143,7 @@ PLUGIN_API int XPluginStart(
     ccb.mode = operational_3dot;
 
     // Default for now
-    SetCamDevice(wiimote);
+    SetCamDevice(tir4_camera);
 
     
     
