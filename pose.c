@@ -297,7 +297,6 @@ int AlterPose(point2D img[3], TPose *pose) {
 
     // align estimated model normalised vectors with axes by rotating relative to other normalised vectors
     float matTrans[16];
-    //float matYaw[16], matPitch[16];
     matTrans[0] = axis_norm[1].x;        matTrans[4] = -axis_norm[2].x;        matTrans[8]  = -axis_norm[0].x;
     matTrans[1] = axis_norm[1].y;        matTrans[5] = -axis_norm[2].y;        matTrans[9]  = -axis_norm[0].y;
     matTrans[2] = axis_norm[1].z;        matTrans[6] = -axis_norm[2].z;        matTrans[10] = -axis_norm[0].z;
@@ -329,6 +328,7 @@ int AlterPose(point2D img[3], TPose *pose) {
             matTrans[2]+matTrans[6]+matTrans[10]);
     //*/
 
+    // Here we compensate the implicit movement caused by the head rotation
     // normalised vectors representing y and z facing opposite to actual y and z axes
     // TODO: these need some defines or gui
     int rotOffsetX = 0;

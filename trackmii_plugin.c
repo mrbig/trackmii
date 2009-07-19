@@ -392,10 +392,10 @@ int MyDrawingCallback (
         fps = fps ? 1/fps : 20;
         SmoothPose(&gPose, fps);
         
-        XPLMSetDataf(gPilotHeadYawDf, -gPose.yaw);
+        XPLMSetDataf(gPilotHeadYawDf, gPose.yaw);
         XPLMSetDataf(gPilotHeadPitchDf, gPose.pitch);
 
-        XPLMSetDataf(gPilotHeadX, gDefaultPilotHead.x-gPose.panX);
+        XPLMSetDataf(gPilotHeadX, gDefaultPilotHead.x+gPose.panX);
         XPLMSetDataf(gPilotHeadY, gDefaultPilotHead.y+gPose.panY);
         XPLMSetDataf(gPilotHeadZ, gDefaultPilotHead.z+gPose.panZ);
     }
