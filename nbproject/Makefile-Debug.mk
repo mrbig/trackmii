@@ -29,11 +29,11 @@ OBJECTDIR=build/Debug/${PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/trackmii.o \
+	${OBJECTDIR}/linux-track/cal.o \
 	${OBJECTDIR}/pose.o \
 	${OBJECTDIR}/linux-track/wiimote_driver.o \
 	${OBJECTDIR}/linux-track/tir4_driver.o \
-	${OBJECTDIR}/gui.o \
-	${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src/cal.o
+	${OBJECTDIR}/gui.o
 
 # C Compiler Flags
 CFLAGS=
@@ -61,6 +61,11 @@ ${OBJECTDIR}/trackmii.o: trackmii.c
 	${RM} $@.d
 	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/trackmii.o trackmii.c
 
+${OBJECTDIR}/linux-track/cal.o: linux-track/cal.c 
+	${MKDIR} -p ${OBJECTDIR}/linux-track
+	${RM} $@.d
+	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/linux-track/cal.o linux-track/cal.c
+
 ${OBJECTDIR}/pose.o: pose.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -80,11 +85,6 @@ ${OBJECTDIR}/gui.o: gui.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/gui.o gui.c
-
-${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src/cal.o: ../linux-track/src/cal.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src
-	${RM} $@.d
-	$(COMPILE.c) -g -Wall -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/home/mrbig/xtras/xplane/linux-track/src/cal.o ../linux-track/src/cal.c
 
 # Subprojects
 .build-subprojects:

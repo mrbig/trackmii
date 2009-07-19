@@ -17,7 +17,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../linux-track/src/cal.c</itemPath>
+      <itemPath>linux-track/cal.c</itemPath>
       <itemPath>gui.c</itemPath>
       <itemPath>pose.c</itemPath>
       <itemPath>linux-track/tir4_driver.c</itemPath>
@@ -49,14 +49,14 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="../linux-track/src/cal.c">
-        <itemTool>0</itemTool>
-      </item>
       <item path="gui.c">
         <itemTool>0</itemTool>
       </item>
       <item path="gui.h">
         <itemTool>3</itemTool>
+      </item>
+      <item path="linux-track/cal.c">
+        <itemTool>0</itemTool>
       </item>
       <item path="linux-track/tir4_driver.c">
         <itemTool>0</itemTool>
@@ -102,14 +102,14 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="../linux-track/src/cal.c">
-        <itemTool>0</itemTool>
-      </item>
       <item path="gui.c">
         <itemTool>0</itemTool>
       </item>
       <item path="gui.h">
         <itemTool>3</itemTool>
+      </item>
+      <item path="linux-track/cal.c">
+        <itemTool>0</itemTool>
       </item>
       <item path="linux-track/tir4_driver.c">
         <itemTool>0</itemTool>
@@ -189,14 +189,14 @@
                             group="sys"/>
         </packFileList>
       </packaging>
-      <item path="../linux-track/src/cal.c">
-        <itemTool>0</itemTool>
-      </item>
       <item path="gui.c">
         <itemTool>0</itemTool>
       </item>
       <item path="gui.h">
         <itemTool>3</itemTool>
+      </item>
+      <item path="linux-track/cal.c">
+        <itemTool>0</itemTool>
       </item>
       <item path="linux-track/tir4_driver.c">
         <itemTool>0</itemTool>
